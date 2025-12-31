@@ -1,0 +1,19 @@
+import { Router } from 'express';
+import { getDashboardData, getCourses, getSchedule, getProfile, updateProfile, getCourseDetails, submitProject, getAssignments } from '../controllers/student.controller';
+import { authenticateToken } from '../middleware/auth.middleware';
+
+const router = Router();
+
+// All routes here require authentication
+router.use(authenticateToken);
+
+router.get('/dashboard', getDashboardData);
+router.get('/courses', getCourses);
+router.get('/courses/:id', getCourseDetails);
+router.post('/courses/:id/submit', submitProject);
+router.get('/schedule', getSchedule);
+router.get('/assignments', getAssignments);
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+
+export default router;

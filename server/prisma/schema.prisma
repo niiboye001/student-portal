@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(uuid())
+  email            String         @unique
+  password         String
+  name             String
+  role             String         @default("STUDENT")
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  enrollments      Enrollment[]
+  profile          Profile?
+  refreshTokens    RefreshToken[]
+}
+
+model Profile {
+  id      String  @id @default(uuid())
+  bio     String?
+  phone   String?
+  address String?
+  userId  String  @unique
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id          String          @id @default(uuid())
+  code        String          @unique
+  name        String
+  description String?
+  credits     Int             @default(3)
+  instructor  String?
+  assignments Assignment[]
+  schedule    ClassSchedule[]
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  grade      String?
+  progress   Int      @default(0)
+  enrolledAt DateTime @default(now())
+  course     Course   @relation(fields: [courseId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model ClassSchedule {
+  id        String @id @default(uuid())
+  courseId  String
+  day       String
+  startTime String
+  endTime   String
+  room      String
+  type      String
+  course    Course @relation(fields: [courseId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  courseId    String
+  status      String   @default("PENDING")
+  grade       String?
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
