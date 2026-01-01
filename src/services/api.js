@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:5001/api',
+    baseURL: '/api',
     withCredentials: true, // Important for sending cookies
     headers: {
         'Content-Type': 'application/json',
@@ -25,7 +25,9 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 // Refresh failed - session probably expired
-                window.location.href = '/login';
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login';
+                }
                 return Promise.reject(refreshError);
             }
         }

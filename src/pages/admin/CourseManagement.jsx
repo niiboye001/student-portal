@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { BookOpen, Users, Clock, Plus, Search, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const CourseManagement = () => {
     const [courses, setCourses] = useState([]);
@@ -36,7 +37,9 @@ const CourseManagement = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
                     <p className="text-gray-500">Manage university curriculum and enrollment.</p>
                 </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 w-fit">
+                <button
+                    onClick={() => toast.success('Create Course Modal coming soon')}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 w-fit">
                     <Plus size={18} />
                     Create New Course
                 </button>
@@ -50,7 +53,9 @@ const CourseManagement = () => {
                                 <div className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
                                     {course.code}
                                 </div>
-                                <button className="text-gray-400 hover:text-gray-600">
+                                <button
+                                    onClick={() => toast('Course options', { icon: '⚙️' })}
+                                    className="text-gray-400 hover:text-gray-600">
                                     <MoreVertical size={20} />
                                 </button>
                             </div>
@@ -69,11 +74,15 @@ const CourseManagement = () => {
                             </div>
 
                             <div className="flex gap-2">
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2 px-3 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
+                                <button
+                                    onClick={() => toast.success(`Editing ${course.code}`)}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2 px-3 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
                                     <Edit size={14} />
                                     Edit
                                 </button>
-                                <button className="p-2 border border-gray-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+                                <button
+                                    onClick={() => toast.error('Delete functionality restricted')}
+                                    className="p-2 border border-gray-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
                                     <Trash2 size={16} />
                                 </button>
                             </div>

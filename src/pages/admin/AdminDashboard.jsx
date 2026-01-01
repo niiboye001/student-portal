@@ -50,10 +50,16 @@ const AdminDashboard = () => {
                     color="bg-purple-600"
                 />
                 <StatCard
-                    label="System Growth"
-                    value="+12%"
+                    label="Recent Registrations"
+                    value={stats?.recentRegistrations || 0}
                     icon={BarChart}
                     color="bg-orange-600"
+                />
+                <StatCard
+                    label="Avg. Class Size"
+                    value={stats?.averageClassSize || 0}
+                    icon={Users}
+                    color="bg-teal-600"
                 />
             </div>
 

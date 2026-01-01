@@ -25,6 +25,11 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
         });
 
         // Calculate Stats
+        const todayDate = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(todayDate.getDate() + 7);
+
+        // Calculate Stats
         const gradeMap: { [key: string]: number } = {
             'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
             'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0
@@ -33,6 +38,7 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
         let totalGradePoints = 0;
         let totalCreditsWithGrades = 0;
         let totalEarnedCredits = 0;
+        let completedCoursesCount = 0;
 
         user?.enrollments.forEach(en => {
             if (en.grade && gradeMap[en.grade] !== undefined) {
@@ -41,6 +47,7 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             }
             if (en.progress === 100) {
                 totalEarnedCredits += en.course.credits;
+                completedCoursesCount++;
             }
         });
 
@@ -48,16 +55,34 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             ? (totalGradePoints / totalCreditsWithGrades).toFixed(2)
             : "0.00";
 
+        // Count upcoming assignments
+        const upcomingAssignmentsIcon = await prisma.assignment.count({
+            where: {
+                course: {
+                    enrollments: {
+                        some: { userId }
+                    }
+                },
+                dueDate: {
+                    gte: todayDate,
+                    lte: nextWeek
+                },
+                status: 'PENDING'
+            }
+        });
+
         const stats = {
             gpa: gpa,
-            attendance: "94%", // Still mock or could be linked
+            attendance: "94%",
             credits: totalEarnedCredits,
-            standing: parseFloat(gpa) >= 3.0 ? "Good" : "Probation"
+            standing: parseFloat(gpa) >= 3.0 ? "Good" : "Probation",
+            completedCourses: completedCoursesCount,
+            upcomingAssignments: upcomingAssignmentsIcon
         };
 
         // Get today's classes from ClassSchedule
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const today = days[new Date().getDay()];
+        const today = days[todayDate.getDay()];
 
         const todayClasses = await prisma.classSchedule.findMany({
             where: {

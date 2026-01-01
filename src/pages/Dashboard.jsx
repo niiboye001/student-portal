@@ -43,21 +43,21 @@ const Dashboard = () => {
                     color="bg-purple-600"
                 />
                 <StatCard
-                    label="Attendance"
-                    value={stats.attendance}
-                    icon={Clock}
-                    color="bg-green-600"
-                />
-                <StatCard
                     label="Credits Earned"
                     value={stats.credits}
                     icon={GraduationCap}
                     color="bg-blue-600"
                 />
                 <StatCard
-                    label="Standing"
-                    value={stats.standing}
+                    label="Completed Courses"
+                    value={stats.completedCourses}
                     icon={TrendingUp}
+                    color="bg-green-600"
+                />
+                <StatCard
+                    label="Assignments Due"
+                    value={stats.upcomingAssignments}
+                    icon={Clock}
                     color="bg-orange-600"
                 />
             </div>
