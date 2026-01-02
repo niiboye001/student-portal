@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -20,6 +20,8 @@ model User {
   enrollments      Enrollment[]
   profile          Profile?
   refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
+  taughtCourses    Course[]       @relation("InstructorCourses")
 }
 
 model Profile {
@@ -37,7 +39,10 @@ model Course {
   name        String
   description String?
   credits     Int             @default(3)
-  instructor  String?
+  instructorId String?
+  instructor   User?          @relation("InstructorCourses", fields: [instructorId], references: [id])
+  level       Int             @default(100)
+  semester    Int             @default(1)
   assignments Assignment[]
   schedule    ClassSchedule[]
   enrollments Enrollment[]
@@ -50,7 +55,7 @@ model Enrollment {
   grade      String?
   progress   Int      @default(0)
   enrolledAt DateTime @default(now())
-  course     Course   @relation(fields: [courseId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, courseId])
@@ -64,7 +69,7 @@ model ClassSchedule {
   endTime   String
   room      String
   type      String
-  course    Course @relation(fields: [courseId], references: [id])
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {
@@ -90,4 +95,27 @@ model Assignment {
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  resource  String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  type      String   @default("academic") // academic, system, event
+  targetRole String? // STUDENT, STAFF, or null for all
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
 }

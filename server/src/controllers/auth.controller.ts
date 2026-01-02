@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import prisma from '../utils/prisma';
+import { logAudit } from '../services/audit.service';
 
 interface AuthRequest extends Request {
     user?: {
@@ -106,6 +107,10 @@ export const login = async (req: Request, res: Response) => {
         });
 
         console.log(`[LOGIN] Success: ${user.email}. Sending response...`);
+
+        // Log Audit
+        await logAudit(user.id, 'LOGIN', 'AUTH', { method: 'email' }, req.ip);
+
         res.json({
             message: 'Login successful',
             user: { id: user.id, name: user.name, email: user.email, role: user.role }
@@ -129,6 +134,9 @@ export const logout = async (req: Request, res: Response) => {
         }
         res.clearCookie('token', { path: '/' });
         res.clearCookie('refreshToken', { path: '/' });
+
+        // Cannot easily log user ID here if not in request, but typically handled by auth middleware
+        // For now, simple response.
         res.json({ message: 'Logout successful' });
     } catch (error) {
         res.status(500).json({ message: 'Logout failed' });

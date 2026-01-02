@@ -48,7 +48,11 @@ const Login = () => {
         try {
             const result = await login(formData.email, formData.password);
             if (result.success) {
-                navigate(from, { replace: true });
+                const destination = location.state?.from?.pathname
+                    ? location.state.from.pathname
+                    : (result.user.role === 'ADMIN' ? '/admin' : '/');
+
+                navigate(destination, { replace: true });
             } else {
                 setAuthError(result.message);
             }
@@ -60,11 +64,11 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
 
                 {/* Header */}
-                <div className="bg-blue-600 p-8 text-center">
+                <div className="bg-blue-600 dark:bg-blue-700 p-8 text-center">
                     <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                         <Lock className="text-white" size={32} />
                     </div>
@@ -77,23 +81,23 @@ const Login = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {authError && (
-                            <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3 text-red-600 text-sm">
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 text-sm">
                                 <AlertCircle size={18} />
                                 {authError}
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Email Address</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Mail className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="name@university.edu"
-                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${errors.email ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                         }`}
                                 />
                             </div>
@@ -101,16 +105,16 @@ const Login = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Password</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Lock className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
                                 <input
                                     type="password"
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Enter your password"
-                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${errors.password ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                         }`}
                                 />
                             </div>
@@ -137,10 +141,10 @@ const Login = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-500">
-                            Forgot your password? <Link to="/forgot-password" className="text-blue-600 hover:underline font-medium">Reset here</Link>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Forgot your password? <Link to="/forgot-password" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Reset here</Link>
                         </p>
-                        <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-center text-gray-400 space-y-1">
+                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400 dark:text-gray-500 space-y-1">
                             <div>Admin: admin@university.edu / password123</div>
                             <div>Student: sharp.brain@gmail.com / password123</div>
                         </div>

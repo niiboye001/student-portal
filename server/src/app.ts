@@ -26,9 +26,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// Middleware (Temporarily disabled security blocks for debugging)
-// app.use(helmet());
-// app.use(limiter);
+// Middleware
+app.use(helmet());
+app.use(limiter);
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], // Frontend URLs
     credentials: true

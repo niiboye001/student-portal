@@ -103,11 +103,34 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             room: c.room
         }));
 
-        // Get announcements (link to a real model later if needed)
-        const announcements = [
-            { id: 1, title: "Midterm Schedule Released", date: "2 days ago", type: "academic" },
-            { id: 2, title: "Campus WiFi Maintenance", date: "1 day ago", type: "system" }
-        ];
+        // Get real announcements
+        const now = new Date();
+        const rawAnnouncements = await prisma.announcement.findMany({
+            where: {
+                OR: [
+                    { targetRole: null },
+                    { targetRole: 'STUDENT' }
+                ],
+                AND: [
+                    {
+                        OR: [
+                            { expiresAt: null },
+                            { expiresAt: { gt: now } }
+                        ]
+                    }
+                ]
+            },
+            take: 5,
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const announcements = rawAnnouncements.map(a => ({
+            id: a.id,
+            title: a.title,
+            content: a.content,
+            date: a.createdAt.toISOString().split('T')[0], // YYYY-MM-DD
+            type: a.type
+        }));
 
         res.json({
             student: {
@@ -138,6 +161,9 @@ export const getCourses = async (req: AuthRequest, res: Response) => {
             id: en.course.id,
             name: en.course.name,
             code: en.course.code,
+            instructor: en.course.instructor,
+            level: en.course.level,
+            semester: en.course.semester,
             grade: en.grade || 'N/A',
             progress: en.progress
         }));

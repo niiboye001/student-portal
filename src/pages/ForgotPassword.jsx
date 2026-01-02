@@ -39,18 +39,18 @@ const ForgotPassword = () => {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-fade-in">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="text-green-600" size={32} />
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-fade-in">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="text-green-600 dark:text-green-400" size={32} />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
-                    <p className="text-gray-500 mb-8">
-                        We've sent a password reset link to <span className="font-semibold text-gray-900">{email}</span>.
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Check your email</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-8">
+                        We've sent a password reset link to <span className="font-semibold text-gray-900 dark:text-white">{email}</span>.
                     </p>
                     <Link
                         to="/login"
-                        className="inline-flex items-center justify-center gap-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 rounded-lg transition-colors"
+                        className="inline-flex items-center justify-center gap-2 w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold py-3 rounded-lg transition-colors"
                     >
                         Return to Login
                     </Link>
@@ -60,9 +60,9 @@ const ForgotPassword = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                <div className="bg-blue-600 p-8 text-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                <div className="bg-blue-600 dark:bg-blue-700 p-8 text-center">
                     <h1 className="text-2xl font-bold text-white mb-2">Forgot Password?</h1>
                     <p className="text-blue-100">No worries, we'll send you reset instructions.</p>
                 </div>
@@ -70,22 +70,22 @@ const ForgotPassword = () => {
                 <div className="p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
-                            <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3 text-red-600 text-sm">
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 text-sm">
                                 <AlertCircle size={18} />
                                 {error}
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Email Address</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Mail className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Enter your email"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                 />
                             </div>
                         </div>
@@ -110,7 +110,7 @@ const ForgotPassword = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <Link to="/login" className="text-sm text-gray-500 hover:text-gray-900 flex items-center justify-center gap-2 transition-colors">
+                        <Link to="/login" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 flex items-center justify-center gap-2 transition-colors">
                             ← Back to Login
                         </Link>
                     </div>

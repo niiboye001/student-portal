@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await api.post('/auth/login', { email, password });
             setUser(data.user);
-            return { success: true };
+            return { success: true, user: data.user };
         } catch (error) {
             console.error('FRONTEND LOGIN ERROR:', error);
             if (error.response) {

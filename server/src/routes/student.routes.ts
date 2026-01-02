@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getDashboardData, getCourses, getSchedule, getProfile, updateProfile, getCourseDetails, submitProject, getAssignments } from '../controllers/student.controller';
+import { getAnnouncements } from '../controllers/announcement.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -14,6 +15,8 @@ router.post('/courses/:id/submit', submitProject);
 router.get('/schedule', getSchedule);
 router.get('/assignments', getAssignments);
 router.get('/profile', getProfile);
+router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
+router.get('/announcements', getAnnouncements);
 
 export default router;

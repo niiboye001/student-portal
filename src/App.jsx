@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
@@ -16,44 +17,62 @@ import ResetPassword from './pages/ResetPassword';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StudentManagement from './pages/admin/StudentManagement';
 import CourseManagement from './pages/admin/CourseManagement';
+import StaffManagement from './pages/admin/StaffManagement';
+import Analytics from './pages/admin/Analytics';
+import AuditLogs from './pages/admin/AuditLogs';
+import Announcements from './pages/admin/Announcements';
+import StaffDashboard from './pages/staff/StaffDashboard';
+import MyCourses from './pages/staff/MyCourses';
 
 import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Toaster position="top-right" reverseOrder={false} />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+      <ThemeProvider>
+        <BrowserRouter>
+          <Toaster position="top-right" reverseOrder={false} />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['STUDENT', 'ADMIN']} />}>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="courses" element={<Courses />} />
-              <Route path="assignments" element={<Assignments />} />
-              <Route path="schedule" element={<Schedule />} />
-              <Route path="profile" element={<Profile />} />
+            {/* Student Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['STUDENT', 'ADMIN']} />}>
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="courses" element={<Courses />} />
+                <Route path="assignments" element={<Assignments />} />
+                <Route path="schedule" element={<Schedule />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-            <Route path="/admin" element={<MainLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="students" element={<StudentManagement />} />
-              <Route path="courses" element={<CourseManagement />} />
-              {/* Add more admin routes here later */}
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+              <Route path="/admin" element={<MainLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="students" element={<StudentManagement />} />
+                <Route path="courses" element={<CourseManagement />} />
+                <Route path="staff" element={<StaffManagement />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="audit-logs" element={<AuditLogs />} />
+                <Route path="announcements" element={<Announcements />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </BrowserRouter>
+
+            {/* Staff Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['STAFF', 'TUTOR', 'ADMIN']} />}>
+              <Route path="/staff" element={<MainLayout />}>
+                <Route index element={<StaffDashboard />} />
+                <Route path="courses" element={<MyCourses />} />
+              </Route>
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
 
 export default App;
-

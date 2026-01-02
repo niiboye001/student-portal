@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getAdminStats, getAllStudents, getAllCourses, createStudent, deleteStudent, updateStudent } from '../controllers/admin.controller';
+import { getAdminStats, getAllStudents, getAllCourses, createStudent, deleteStudent, updateStudent, createCourse, updateCourse, deleteCourse, enrollStudent, getCourseEnrollments, deleteEnrollment, createStaff, getAllStaff, updateStaff, deleteStaff } from '../controllers/admin.controller';
+import { getAuditLogs, getAuditStats } from '../controllers/audit.controller';
+import { importStudents, importCourses, importStaff } from '../controllers/import.controller';
+import { getAnnouncements, createAnnouncement, deleteAnnouncement } from '../controllers/announcement.controller';
+import upload from '../middleware/upload.middleware';
 import { authenticateToken, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -12,7 +16,39 @@ router.get('/stats', getAdminStats);
 router.get('/students', getAllStudents);
 router.post('/students', createStudent);
 router.put('/students/:id', updateStudent);
-router.get('/courses', getAllCourses);
 router.delete('/students/:id', deleteStudent);
+
+router.get('/courses', getAllCourses);
+router.post('/courses', createCourse);
+router.put('/courses/:id', updateCourse);
+router.delete('/courses/:id', deleteCourse);
+
+// Enrollment Management
+router.post('/enrollments', enrollStudent);
+router.delete('/enrollments/:id', deleteEnrollment);
+router.get('/courses/:id/enrollments', getCourseEnrollments);
+
+// Staff Management
+router.get('/staff', getAllStaff);
+router.post('/staff', createStaff);
+router.put('/staff/:id', updateStaff);
+router.delete('/staff/:id', deleteStaff);
+
+// Audit Logs
+router.get('/audit', getAuditLogs);
+router.get('/audit', getAuditLogs);
+router.get('/audit/stats', getAuditStats);
+
+// Announcements
+router.get('/announcements', getAnnouncements);
+router.post('/announcements', createAnnouncement);
+router.delete('/announcements/:id', deleteAnnouncement);
+
+
+
+// Bulk Import
+router.post('/import/students', upload.single('file'), importStudents);
+router.post('/import/courses', upload.single('file'), importCourses);
+router.post('/import/staff', upload.single('file'), importStaff);
 
 export default router;

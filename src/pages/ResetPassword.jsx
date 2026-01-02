@@ -63,12 +63,12 @@ const ResetPassword = () => {
 
     if (!token) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-lg p-8 text-center max-w-md">
-                    <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Invalid Link</h2>
-                    <p className="text-gray-500 mb-6">The password reset link is invalid or missing.</p>
-                    <Link to="/login" className="text-blue-600 hover:underline font-medium">Back to Login</Link>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center max-w-md">
+                    <AlertCircle className="mx-auto text-red-500 dark:text-red-400 mb-4" size={48} />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Invalid Link</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">The password reset link is invalid or missing.</p>
+                    <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Back to Login</Link>
                 </div>
             </div>
         );
@@ -76,13 +76,13 @@ const ResetPassword = () => {
 
     if (status === 'success') {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-fade-in">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="text-green-600" size={32} />
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-fade-in">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="text-green-600 dark:text-green-400" size={32} />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Reset!</h2>
-                    <p className="text-gray-500 mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Password Reset!</h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-8">
                         Your password has been successfully updated. Redirecting to login...
                     </p>
                     <Link
@@ -97,9 +97,9 @@ const ResetPassword = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                <div className="bg-blue-600 p-8 text-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                <div className="bg-blue-600 dark:bg-blue-700 p-8 text-center">
                     <h1 className="text-2xl font-bold text-white mb-2">Reset Password</h1>
                     <p className="text-blue-100">Create a new secure password</p>
                 </div>
@@ -107,39 +107,39 @@ const ResetPassword = () => {
                 <div className="p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {errors.general && (
-                            <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3 text-red-600 text-sm">
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 text-sm">
                                 <AlertCircle size={18} />
                                 {errors.general}
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">New Password</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Lock className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
                                 <input
                                     type="password"
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Min. 8 characters"
-                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border outline-none transition-all ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${errors.password ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500'}`}
                                 />
                             </div>
                             {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Lock className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
                                 <input
                                     type="password"
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     placeholder="Repeat new password"
-                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border outline-none transition-all ${errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${errors.confirmPassword ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500'}`}
                                 />
                             </div>
                             {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}

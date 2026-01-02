@@ -1,14 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import api from '../../services/api';
-import { User, Mail, Calendar, Search, Filter, MoreVertical, X, Edit, Trash2 } from 'lucide-react';
+import { User, Mail, Calendar, Search, Filter, MoreVertical, X, Edit, Trash2, FileUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import StudentModal from '../../components/admin/StudentModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import CSVUploader from '../../components/CSVUploader';
 
 const StudentManagement = () => {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [filter, setFilter] = useState('all'); // 'all', 'recent'
     const [sort, setSort] = useState('newest'); // 'newest', 'oldest', 'name'
@@ -51,16 +54,23 @@ const StudentManagement = () => {
         };
     }, [showFilterMenu, openMenuId]);
 
-    const handleDeleteStudent = async (student) => {
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [studentToDelete, setStudentToDelete] = useState(null);
+
+    const handleDeleteClick = (student) => {
+        setStudentToDelete(student);
+        setDeleteModalOpen(true);
         setOpenMenuId(null);
-        if (!window.confirm(`Are you sure you want to delete ${student.name}? This action cannot be undone.`)) {
-            return;
-        }
+    };
+
+    const confirmDelete = async () => {
+        if (!studentToDelete) return;
 
         try {
-            await api.delete(`/admin/students/${student.id}`);
+            await api.delete(`/admin/students/${studentToDelete.id}`);
             toast.success('Student deleted successfully');
             fetchStudents();
+            setDeleteModalOpen(false);
         } catch (error) {
             console.error('Delete failed', error);
             toast.error('Failed to delete student');
@@ -104,25 +114,33 @@ const StudentManagement = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Student Management</h1>
-                    <p className="text-gray-500">View and manage all registered student accounts.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Management</h1>
+                    <p className="text-gray-500 dark:text-gray-400">View and manage all registered student accounts.</p>
                 </div>
-                <button
-                    onClick={handleRegisterClick}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 w-fit">
-                    <User size={18} />
-                    Register Student
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                        <FileUp size={18} />
+                        Import CSV
+                    </button>
+                    <button
+                        onClick={handleRegisterClick}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <User size={18} />
+                        Register Student
+                    </button>
+                </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row gap-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
                             placeholder="Search by name or email..."
-                            className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                            className="w-full pl-10 pr-10 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -138,8 +156,8 @@ const StudentManagement = () => {
                         <button
                             onClick={() => setShowFilterMenu(!showFilterMenu)}
                             className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${filter !== 'all' || sort !== 'newest'
-                                    ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                ? 'border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400'
+                                : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                                 }`}>
                             <Filter size={18} />
                             Filter & Sort
@@ -185,33 +203,33 @@ const StudentManagement = () => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 dark:bg-gray-700/50">
                             <tr>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 border-b">Student</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 border-b">Email</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 border-b">Registered on</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 border-b">Actions</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Student</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Email</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Registered on</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                             {filteredStudents.length > 0 ? (
                                 filteredStudents.map((student) => (
-                                    <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-bold">
                                                     {student.name.charAt(0)}
                                                 </div>
-                                                <span className="font-medium text-gray-900">{student.name}</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">{student.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600">
+                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
                                             <div className="flex items-center gap-2">
                                                 <Mail size={14} />
                                                 {student.email}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600">
+                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
                                             <div className="flex items-center gap-2">
                                                 <Calendar size={14} />
                                                 {new Date(student.createdAt).toLocaleDateString()}
@@ -231,18 +249,22 @@ const StudentManagement = () => {
                                                 {openMenuId === student.id && (
                                                     <div
                                                         ref={rowMenuRef}
-                                                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-1"
+                                                        className={`absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1 ${filteredStudents.indexOf(student) >= filteredStudents.length - 2 && filteredStudents.length > 2
+                                                            ? 'bottom-full mb-2 origin-bottom-right'
+                                                            : 'mt-2 origin-top-right'
+                                                            }`}
+                                                        style={{ right: '0' }}
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         <button
                                                             onClick={() => handleEditStudent(student)}
-                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                                                             <Edit size={16} />
                                                             Edit Student
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDeleteStudent(student)}
-                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                            onClick={() => handleDeleteClick(student)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
                                                             <Trash2 size={16} />
                                                             Delete Student
                                                         </button>
@@ -270,6 +292,25 @@ const StudentManagement = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={fetchStudents}
                 student={selectedStudent}
+            />
+
+            <ConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Student"
+                message={`Are you sure you want to delete ${studentToDelete?.name}? This action cannot be undone.`}
+                confirmText="Delete Student"
+                isDanger={true}
+            />
+
+            <CSVUploader
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                title="Students"
+                endpoint="/admin/import/students"
+                templateHeaders="name, email"
+                onSuccess={fetchStudents}
             />
         </div >
     );

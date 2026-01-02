@@ -59,15 +59,15 @@ const CourseDetails = ({ courseId, onClose }) => {
     );
 
     return (
-        <div className="h-full flex flex-col bg-white">
+        <div className="h-full flex flex-col bg-white dark:bg-gray-800">
             {/* Header */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-700/30">
                 <div>
-                    <div className="text-sm font-bold text-blue-600 mb-1">{course.code}</div>
-                    <h2 className="text-xl font-bold text-gray-900">{course.name}</h2>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-1">{course.code}</div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{course.name}</h2>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors shadow-sm">
-                    <X size={20} className="text-gray-500" />
+                <button onClick={onClose} className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-full transition-colors shadow-sm">
+                    <X size={20} className="text-gray-500 dark:text-gray-400" />
                 </button>
             </div>
 
@@ -75,43 +75,43 @@ const CourseDetails = ({ courseId, onClose }) => {
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
                 {/* At a Glance */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <div className="flex items-center gap-2 text-blue-600 mb-1">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
                             <User size={16} />
                             <span className="text-xs font-bold uppercase tracking-wider">Instructor</span>
                         </div>
-                        <div className="text-sm font-semibold text-gray-900">{course.instructor}</div>
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">{course.instructor}</div>
                     </div>
-                    <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-                        <div className="flex items-center gap-2 text-green-600 mb-1">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
                             <Clock size={16} />
                             <span className="text-xs font-bold uppercase tracking-wider">Progress</span>
                         </div>
-                        <div className="text-sm font-semibold text-gray-900">{course.progress}% Completed</div>
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">{course.progress}% Completed</div>
                     </div>
                 </div>
 
                 {/* Description */}
                 <section className="space-y-3">
-                    <div className="flex items-center gap-2 text-gray-900 font-bold">
-                        <BookOpen size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold">
+                        <BookOpen size={18} className="text-blue-600 dark:text-blue-400" />
                         <h3>Course Description</h3>
                     </div>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                         {course.description}
                     </p>
                 </section>
 
                 {/* Syllabus */}
                 <section className="space-y-3">
-                    <div className="flex items-center gap-2 text-gray-900 font-bold">
-                        <FileText size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold">
+                        <FileText size={18} className="text-blue-600 dark:text-blue-400" />
                         <h3>Syllabus</h3>
                     </div>
                     <div className="space-y-2">
                         {course.syllabus.map((item, index) => (
-                            <div key={index} className="flex gap-3 text-sm text-gray-600 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                <span className="font-bold text-blue-600">{index + 1}.</span>
+                            <div key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                                <span className="font-bold text-blue-600 dark:text-blue-400">{index + 1}.</span>
                                 <span>{item}</span>
                             </div>
                         ))}
@@ -120,20 +120,20 @@ const CourseDetails = ({ courseId, onClose }) => {
 
                 {/* Assignments */}
                 <section className="space-y-3 pb-8">
-                    <div className="flex items-center gap-2 text-gray-900 font-bold">
-                        <Calendar size={18} className="text-blue-600" />
+                    <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold">
+                        <Calendar size={18} className="text-blue-600 dark:text-blue-400" />
                         <h3>Upcoming Assignments</h3>
                     </div>
                     <div className="space-y-3">
                         {course.upcomingAssignments.map((assignment) => (
-                            <div key={assignment.id} className="p-4 border border-gray-100 rounded-xl hover:border-blue-200 transition-colors bg-white shadow-sm">
+                            <div key={assignment.id} className="p-4 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-blue-200 dark:hover:border-blue-700 transition-colors bg-white dark:bg-gray-800 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-semibold text-gray-900 text-sm">{assignment.title}</h4>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{assignment.title}</h4>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
                                         {assignment.status}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                                     <Calendar size={14} />
                                     <span>Due: {assignment.dueDate}</span>
                                 </div>
@@ -144,9 +144,9 @@ const CourseDetails = ({ courseId, onClose }) => {
             </div>
 
             {/* Footer Action */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+            <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
                 {submitted ? (
-                    <div className="flex items-center justify-center gap-2 py-3 px-4 bg-green-50 text-green-700 font-bold rounded-xl border border-green-100 animate-fade-in">
+                    <div className="flex items-center justify-center gap-2 py-3 px-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 font-bold rounded-xl border border-green-100 dark:border-green-800 animate-fade-in">
                         <CheckCircle2 size={20} />
                         Successfully Submitted
                     </div>

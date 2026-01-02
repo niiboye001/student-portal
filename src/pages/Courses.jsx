@@ -60,22 +60,50 @@ const Courses = () => {
             doc.setLineWidth(0.5);
             doc.line(14, 65, 196, 65);
 
-            // Courses Table
-            const tableColumn = ["Course Name", "Code", "Progress", "Grade"];
-            const tableRows = courses.map(course => [
-                course.name,
-                course.code,
-                `${course.progress}%`,
-                course.grade || 'N/A'
-            ]);
+            // Group courses by Level and Semester
+            const groupedCourses = {};
+            courses.forEach(course => {
+                const key = `Level ${course.level || 100} - Semester ${course.semester || 1}`;
+                if (!groupedCourses[key]) {
+                    groupedCourses[key] = [];
+                }
+                groupedCourses[key].push([
+                    course.name,
+                    course.code,
+                    `${course.progress}%`,
+                    course.grade || 'N/A'
+                ]);
+            });
 
-            autoTable(doc, {
-                startY: 75,
-                head: [tableColumn],
-                body: tableRows,
-                theme: 'grid',
-                headStyles: { fillColor: [37, 99, 235], textColor: 255 }, // Blue header
-                styles: { fontSize: 10, cellPadding: 5 }
+            // Sort keys to ensure order (100-1, 100-2, 200-1, etc.)
+            const sortedKeys = Object.keys(groupedCourses).sort();
+
+            let currentY = 75;
+
+            sortedKeys.forEach(group => {
+                // Add Group Header
+                if (currentY > 270) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(37, 99, 235); // Blue
+                doc.text(group, 14, currentY);
+
+                // Add Table for this group
+                autoTable(doc, {
+                    startY: currentY + 5,
+                    head: [["Course Name", "Code", "Progress", "Grade"]],
+                    body: groupedCourses[group],
+                    theme: 'grid',
+                    headStyles: { fillColor: [240, 240, 240], textColor: 80, fontStyle: 'bold' }, // Light gray header
+                    styles: { fontSize: 10, cellPadding: 5 },
+                    margin: { left: 14, right: 14 }
+                });
+
+                currentY = (doc).lastAutoTable.finalY + 15;
             });
 
             // Footer
@@ -116,11 +144,11 @@ const Courses = () => {
         <div className="space-y-6 relative overflow-x-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">My Courses</h1>
-                    <p className="text-gray-500">View your current enrollment and grades</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Courses</h1>
+                    <p className="text-gray-500 dark:text-gray-400">View your current enrollment and grades</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <Filter size={18} />
                         <span className="hidden xs:inline">Filter</span>
                     </button>
@@ -135,39 +163,39 @@ const Courses = () => {
             </div>
 
             {/* Desktop Table View (Hidden on Mobile) */}
-            <div className="hidden lg:block bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+            <div className="hidden lg:block bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-6 py-4 font-semibold text-gray-900">Course Name</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900">Code</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900">Progress</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900">Grade</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900">Action</th>
+                            <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Course Name</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Code</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Progress</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Grade</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {courses.map((course) => (
-                                <tr key={course.id} className="hover:bg-gray-50/50 transition-colors">
+                                <tr key={course.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                                     <td className="px-6 py-4">
-                                        <div className="font-medium text-gray-900">{course.name}</div>
-                                        <div className="text-sm text-gray-500">Prof. Sarah Smith</div>
+                                        <div className="font-medium text-gray-900 dark:text-white">{course.name}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{course.instructor || 'Staff'}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold font-mono">
+                                        <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs font-bold font-mono">
                                             {course.code}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 w-1/4">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-blue-600 rounded-full transition-all duration-1000"
                                                     style={{ width: `${course.progress}%` }}
                                                 />
                                             </div>
-                                            <span className="text-sm font-medium text-gray-600">{course.progress}%</span>
+                                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{course.progress}%</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
@@ -196,13 +224,13 @@ const Courses = () => {
                 {courses.map((course) => (
                     <div
                         key={course.id}
-                        className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden"
+                        className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden"
                     >
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div>
                         <div className="flex justify-between items-start mb-4 pl-2">
                             <div>
-                                <div className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">{course.code}</div>
-                                <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">{course.name}</h3>
+                                <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">{course.code}</div>
+                                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">{course.name}</h3>
                             </div>
                             <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getGradeColor(course.grade)}`}>
                                 {course.grade}
@@ -211,11 +239,11 @@ const Courses = () => {
 
                         <div className="space-y-4 pl-2">
                             <div>
-                                <div className="flex justify-between text-xs text-gray-500 mb-1.5 font-medium">
+                                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5 font-medium">
                                     <span>Course Progress</span>
                                     <span>{course.progress}%</span>
                                 </div>
-                                <div className="h-2 bg-gray-50 rounded-full overflow-hidden">
+                                <div className="h-2 bg-gray-50 dark:bg-gray-700/50 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-blue-600 rounded-full"
                                         style={{ width: `${course.progress}%` }}
@@ -245,7 +273,7 @@ const Courses = () => {
 
             {/* Side Drawer */}
             <div
-                className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-[60] shadow-2xl transition-transform duration-300 transform ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-800 z-[60] shadow-2xl transition-transform duration-300 transform ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
                     }`}
             >
                 {selectedCourseId && (

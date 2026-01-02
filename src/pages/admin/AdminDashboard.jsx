@@ -10,7 +10,8 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const { data } = await api.get('/admin/stats');
+                const { data } = await api.get(`/admin/stats?_t=${new Date().getTime()}`);
+                console.log('Admin Stats Response:', data);
                 setStats(data.stats);
             } catch (error) {
                 console.error('Failed to fetch admin stats', error);
@@ -26,8 +27,8 @@ const AdminDashboard = () => {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Overview</h1>
-                <p className="text-gray-500">System-wide statistics and management.</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Overview</h1>
+                <p className="text-gray-500 dark:text-gray-400">System-wide statistics and management.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -63,9 +64,9 @@ const AdminDashboard = () => {
                 />
             </div>
 
-            <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
-                <h2 className="text-lg font-bold text-blue-900 mb-2">Welcome to the Command Center</h2>
-                <p className="text-blue-700">Use the sidebar to manage students, courses, and view detailed analytics.</p>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-6 rounded-xl">
+                <h2 className="text-lg font-bold text-blue-900 dark:text-blue-100 mb-2">Welcome to the Command Center</h2>
+                <p className="text-blue-700 dark:text-blue-300">Use the sidebar to manage students, courses, and view detailed analytics.</p>
             </div>
         </div>
     );

@@ -44,17 +44,19 @@ const Assignments = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
-                    <p className="text-gray-500">Track your coursework and upcoming deadlines.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Assignments</h1>
+                    <p className="text-gray-500 dark:text-gray-400">Track your coursework and upcoming deadlines.</p>
                 </div>
-                <div className="flex bg-gray-100 p-1 rounded-lg">
+                <div className="flex bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg">
                     {['ALL', 'PENDING', 'SUBMITTED', 'GRADED'].map((f) => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
                             className={clsx(
                                 "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
-                                filter === f ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                                filter === f
+                                    ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm"
+                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             )}
                         >
                             {f.charAt(0) + f.slice(1).toLowerCase()}
@@ -68,17 +70,17 @@ const Assignments = () => {
                     filteredAssignments.map((assignment) => (
                         <div
                             key={assignment.id}
-                            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-blue-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                            className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:border-blue-300 dark:hover:border-blue-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center shrink-0">
                                     <FileText size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-gray-900">{assignment.title}</h3>
-                                    <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-0.5">
-                                        <span className="font-medium text-blue-600">{assignment.course.name}</span>
-                                        <span className="text-gray-300">•</span>
+                                    <h3 className="font-bold text-gray-900 dark:text-white">{assignment.title}</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5">
+                                        <span className="font-medium text-blue-600 dark:text-blue-400">{assignment.course.name}</span>
+                                        <span className="text-gray-300 dark:text-gray-600">•</span>
                                         <Calendar size={14} />
                                         Due {new Date(assignment.dueDate).toLocaleDateString()}
                                     </p>
@@ -106,7 +108,7 @@ const Assignments = () => {
                                         "px-4 py-2 rounded-lg font-medium transition-colors",
                                         assignment.status === 'PENDING'
                                             ? "bg-blue-600 text-white hover:bg-blue-700"
-                                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                            : "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
                                     )}
                                 >
                                     {assignment.status === 'PENDING' ? 'Submit' : 'View Submission'}
@@ -115,8 +117,8 @@ const Assignments = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-12 text-center">
-                        <p className="text-gray-500">No assignments found for this filter.</p>
+                    <div className="bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
+                        <p className="text-gray-500 dark:text-gray-400">No assignments found for this filter.</p>
                     </div>
                 )}
             </div>

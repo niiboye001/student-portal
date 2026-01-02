@@ -84,28 +84,28 @@ const Profile = () => {
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-                <p className="text-gray-500">Manage your personal information and account security</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
+                <p className="text-gray-500 dark:text-gray-400">Manage your personal information and account security</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
 
                     {/* Personal Info Section */}
                     <div className="space-y-4">
-                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2">
-                            <User size={20} className="text-blue-600" />
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2">
+                            <User size={20} className="text-blue-600 dark:text-blue-400" />
                             Personal Information
                         </h2>
 
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-gray-700">Full Name</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                             <input
                                 type="text"
                                 name="fullName"
                                 value={formData.fullName}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.fullName ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                     }`}
                             />
                             {errors.fullName && (
@@ -116,7 +116,7 @@ const Profile = () => {
                         </div>
 
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-gray-700">Email Address</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
                             <div className="relative">
                                 <Mail size={18} className="absolute left-3 top-3 text-gray-400" />
                                 <input
@@ -124,7 +124,7 @@ const Profile = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.email ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                         }`}
                                 />
                             </div>
@@ -138,20 +138,20 @@ const Profile = () => {
 
                     {/* Security Section */}
                     <div className="space-y-4 pt-4">
-                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2">
-                            <Lock size={20} className="text-blue-600" />
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2">
+                            <Lock size={20} className="text-blue-600 dark:text-blue-400" />
                             Security
                         </h2>
 
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-gray-700">Current Password</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
                             <input
                                 type="password"
                                 name="currentPassword"
                                 value={formData.currentPassword}
                                 onChange={handleChange}
                                 placeholder="Required to make changes"
-                                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.currentPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.currentPassword ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                     }`}
                             />
                             {errors.currentPassword && (
@@ -162,14 +162,14 @@ const Profile = () => {
                         </div>
 
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-gray-700">New Password (Optional)</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Password (Optional)</label>
                             <input
                                 type="password"
                                 name="newPassword"
                                 value={formData.newPassword}
                                 onChange={handleChange}
                                 placeholder="Leave blank to keep current"
-                                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${errors.newPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.newPassword ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                     }`}
                             />
                             {errors.newPassword && (
