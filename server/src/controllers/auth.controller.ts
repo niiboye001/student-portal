@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import prisma from '../utils/prisma';
 import { logAudit } from '../services/audit.service';
+import { generateUserId } from '../utils/id.utils';
 
 interface AuthRequest extends Request {
     user?: {
@@ -29,12 +30,18 @@ export const register = async (req: Request, res: Response) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Generate Username
+        const generatedRole = role || 'STUDENT';
+        const username = await generateUserId(generatedRole === 'ADMIN' ? 'STAFF' : 'STUDENT'); // Admin gets STAFF prefix or we can adjust logic
+
         const user = await prisma.user.create({
             data: {
+                username,
                 email,
                 password: hashedPassword,
                 name,
-                role: role || 'STUDENT'
+                role: generatedRole
             }
         });
 
@@ -46,10 +53,10 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
-        console.log(`[LOGIN ATTEMPT] Email: "${email}", Password Length: ${password?.length}`);
+        const { userId, password } = req.body;
+        console.log(`[LOGIN ATTEMPT] UserID: "${userId}"`);
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { username: userId } });
         console.log(`[LOGIN] User found: ${!!user}`);
 
         if (!user) {
@@ -113,7 +120,7 @@ export const login = async (req: Request, res: Response) => {
 
         res.json({
             message: 'Login successful',
-            user: { id: user.id, name: user.name, email: user.email, role: user.role }
+            user: { id: user.id, name: user.name, email: user.email, role: user.role, username: user.username }
         });
     } catch (error: any) {
         console.error('CRITICAL LOGIN ERROR:', error);

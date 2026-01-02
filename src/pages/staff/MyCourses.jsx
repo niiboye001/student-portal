@@ -8,9 +8,18 @@ const MyCourses = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // TODO: Implement getStaffCourses endpoint
-        // api.get('/staff/courses').then(...)
-        setLoading(false);
+        const fetchCourses = async () => {
+            try {
+                const { data } = await api.get('/staff/courses');
+                setCourses(data);
+            } catch (error) {
+                console.error('Failed to fetch courses', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCourses();
     }, []);
 
     return (

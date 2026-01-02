@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import StatCard from '../components/StatCard';
-import { GraduationCap, Clock, Award, TrendingUp, Calendar, Bell } from 'lucide-react';
+import { GraduationCap, Clock, Award, TrendingUp, Calendar, Bell, BookOpen } from 'lucide-react';
 
 const Dashboard = () => {
     const [data, setData] = useState(null);
@@ -44,14 +44,14 @@ const Dashboard = () => {
                     color="bg-purple-600"
                 />
                 <StatCard
-                    label="Credits Earned"
-                    value={stats.credits}
-                    icon={GraduationCap}
+                    label="Active Courses"
+                    value={stats.activeCourses}
+                    icon={BookOpen}
                     color="bg-blue-600"
                 />
                 <StatCard
-                    label="Completed Courses"
-                    value={stats.completedCourses}
+                    label="Avg. Progress"
+                    value={`${stats.avgProgress}%`}
                     icon={TrendingUp}
                     color="bg-green-600"
                 />
@@ -79,7 +79,13 @@ const Dashboard = () => {
                             <div key={cls.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
                                 <div className="flex flex-col">
                                     <span className="font-semibold text-gray-900 dark:text-white">{cls.name}</span>
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">{cls.room}</span>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                        <span className={`font-medium ${cls.isToday ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                                            {cls.isToday ? 'Today' : cls.day}
+                                        </span>
+                                        <span>•</span>
+                                        <span>{cls.room}</span>
+                                    </div>
                                 </div>
                                 <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {cls.time}

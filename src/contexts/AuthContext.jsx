@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, []);
 
-    const login = async (email, password) => {
+    const login = async (userId, password) => {
         try {
-            const { data } = await api.post('/auth/login', { email, password });
+            const { data } = await api.post('/auth/login', { userId, password });
             setUser(data.user);
             return { success: true, user: data.user };
         } catch (error) {

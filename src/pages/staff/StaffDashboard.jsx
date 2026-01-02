@@ -2,13 +2,46 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { BookOpen, Users, Clock } from 'lucide-react';
 
+import api from '../../services/api';
+
 const StaffDashboard = () => {
     const { user } = useAuth();
+    const [stats, setStats] = React.useState({ courses: 0, students: 0, upcomingClasses: 0 });
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const { data } = await api.get('/staff/stats');
+                setStats(data);
+            } catch (error) {
+                console.error('Failed to fetch stats', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    // Logic: If name starts with a title (Mr., Ms., Dr., Prof.), use the first two words (e.g. "Ms. Connor"). 
+    // Otherwise just use the first name (e.g. "Alex").
+    const getDisplayName = (fullName) => {
+        if (!fullName) return 'Staff';
+        const parts = fullName.split(' ');
+        const honorifics = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
+        if (honorifics.some(h => parts[0].startsWith(h)) && parts.length > 1) {
+            return `${parts[0]} ${parts[1]}`;
+        }
+        return parts[0];
+    };
+
+    const displayName = getDisplayName(user?.name);
 
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Welcome back, {user?.name?.split(' ')[0]}
+                Welcome back, {displayName}
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -19,7 +52,7 @@ const StaffDashboard = () => {
                         </div>
                         <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">My Courses</p>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">--</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '...' : stats.courses}</h3>
                         </div>
                     </div>
                 </div>
@@ -31,7 +64,7 @@ const StaffDashboard = () => {
                         </div>
                         <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Total Students</p>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">--</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '...' : stats.students}</h3>
                         </div>
                     </div>
                 </div>
@@ -43,7 +76,7 @@ const StaffDashboard = () => {
                         </div>
                         <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Upcoming Classes</p>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">0</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '...' : stats.upcomingClasses}</h3>
                         </div>
                     </div>
                 </div>

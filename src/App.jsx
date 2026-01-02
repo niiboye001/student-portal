@@ -23,6 +23,7 @@ import AuditLogs from './pages/admin/AuditLogs';
 import Announcements from './pages/admin/Announcements';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import MyCourses from './pages/staff/MyCourses';
+import StaffCourseDetails from './pages/staff/StaffCourseDetails';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -43,8 +44,15 @@ function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="courses" element={<Courses />} />
                 <Route path="assignments" element={<Assignments />} />
-                <Route path="schedule" element={<Schedule />} />
+
                 <Route path="profile" element={<Profile />} />
+              </Route>
+            </Route>
+
+            {/* Shared Routes (Student & Staff) */}
+            <Route element={<ProtectedRoute allowedRoles={['STUDENT', 'STAFF', 'TUTOR', 'ADMIN']} />}>
+              <Route element={<MainLayout />}>
+                <Route path="/schedule" element={<Schedule />} />
               </Route>
             </Route>
 
@@ -66,6 +74,7 @@ function App() {
               <Route path="/staff" element={<MainLayout />}>
                 <Route index element={<StaffDashboard />} />
                 <Route path="courses" element={<MyCourses />} />
+                <Route path="courses/:id" element={<StaffCourseDetails />} />
               </Route>
             </Route>
           </Routes>

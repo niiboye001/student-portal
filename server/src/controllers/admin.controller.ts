@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import bcrypt from 'bcryptjs';
 import { logAudit } from '../services/audit.service';
+import { generateUserId } from '../utils/id.utils';
 
 interface AuthRequest extends Request {
     user?: {
@@ -25,11 +26,13 @@ export const createStudent = async (req: Request, res: Response) => {
 
         // Default password: Student123!
         const hashedPassword = await bcrypt.hash('Student123!', 10);
+        const username = await generateUserId('STUDENT');
 
         const newUser = await prisma.user.create({
             data: {
                 name,
                 email,
+                username,
                 password: hashedPassword,
                 role: 'STUDENT',
                 profile: {
@@ -40,6 +43,7 @@ export const createStudent = async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 email: true,
+                username: true,
                 role: true,
                 createdAt: true
             }
@@ -365,9 +369,11 @@ export const createStaff = async (req: Request, res: Response) => {
         }
 
         const hashedPassword = await bcrypt.hash('Staff123!', 10);
+        const username = await generateUserId('STAFF');
 
         const newStaff = await prisma.user.create({
             data: {
+                username,
                 name,
                 email,
                 password: hashedPassword,
@@ -378,6 +384,7 @@ export const createStaff = async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 email: true,
+                username: true,
                 role: true,
                 createdAt: true
             }
@@ -462,8 +469,8 @@ export const deleteStaff = async (req: Request, res: Response) => {
             // Unlink from courses if staff exists
             if (staff) {
                 await tx.course.updateMany({
-                    where: { instructor: staff.name },
-                    data: { instructor: null }
+                    where: { instructorId: staff.id },
+                    data: { instructorId: null }
                 });
             }
 

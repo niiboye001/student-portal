@@ -80,7 +80,7 @@ const CourseDetails = ({ courseId, onClose }) => {
                             <User size={16} />
                             <span className="text-xs font-bold uppercase tracking-wider">Instructor</span>
                         </div>
-                        <div className="text-sm font-semibold text-gray-900 dark:text-white">{course.instructor}</div>
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">{course.instructor?.name || 'Staff'}</div>
                     </div>
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
                         <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">

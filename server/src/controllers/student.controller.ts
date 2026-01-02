@@ -71,22 +71,28 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             }
         });
 
+        const activeEnrollments = user?.enrollments.length || 0;
+
+        const totalProgress = user?.enrollments.reduce((acc, curr) => acc + curr.progress, 0) || 0;
+        const avgProgress = activeEnrollments > 0 ? Math.round(totalProgress / activeEnrollments) : 0;
+
         const stats = {
             gpa: gpa,
-            attendance: "94%",
+            activeCourses: activeEnrollments,
+            avgProgress: avgProgress,
             credits: totalEarnedCredits,
             standing: parseFloat(gpa) >= 3.0 ? "Good" : "Probation",
             completedCourses: completedCoursesCount,
             upcomingAssignments: upcomingAssignmentsIcon
         };
 
-        // Get today's classes from ClassSchedule
+        // Get upcoming classes (Next 7 days)
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const today = days[todayDate.getDay()];
+        const currentDayIndex = todayDate.getDay();
+        const currentTime = todayDate.getHours() * 60 + todayDate.getMinutes(); // Minutes from midnight
 
-        const todayClasses = await prisma.classSchedule.findMany({
+        const allSchedules = await prisma.classSchedule.findMany({
             where: {
-                day: today,
                 course: {
                     enrollments: {
                         some: { userId }
@@ -96,12 +102,42 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             include: { course: true }
         });
 
-        const upcomingClasses = todayClasses.map(c => ({
-            id: c.id,
-            name: c.course.name,
-            time: c.startTime,
-            room: c.room
-        }));
+        const upcomingClasses = allSchedules
+            .map(schedule => {
+                const scheduleDayIndex = days.indexOf(schedule.day);
+                let daysUntil = scheduleDayIndex - currentDayIndex;
+
+                // Convert start time to minutes
+                const [hours, minutes] = schedule.startTime.split(':').map(Number);
+                const scheduleTimeMinutes = hours * 60 + minutes;
+
+                if (daysUntil < 0) {
+                    daysUntil += 7; // Next week
+                } else if (daysUntil === 0) {
+                    if (scheduleTimeMinutes < currentTime) {
+                        daysUntil += 7; // Already passed today, so next week
+                    }
+                }
+
+                return {
+                    ...schedule,
+                    daysUntil,
+                    timeMinutes: scheduleTimeMinutes
+                };
+            })
+            .sort((a, b) => {
+                if (a.daysUntil !== b.daysUntil) return a.daysUntil - b.daysUntil;
+                return a.timeMinutes - b.timeMinutes;
+            })
+            .slice(0, 5) // Take top 5
+            .map(c => ({
+                id: c.id,
+                name: c.course.name,
+                time: c.startTime,
+                room: c.room,
+                day: c.day,
+                isToday: c.daysUntil === 0
+            }));
 
         // Get real announcements
         const now = new Date();
@@ -154,14 +190,14 @@ export const getCourses = async (req: AuthRequest, res: Response) => {
         const userId = req.user?.userId;
         const enrollments = await prisma.enrollment.findMany({
             where: { userId },
-            include: { course: true }
+            include: { course: { include: { instructor: true } } }
         });
 
         const courses = enrollments.map(en => ({
             id: en.course.id,
             name: en.course.name,
             code: en.course.code,
-            instructor: en.course.instructor,
+            instructor: en.course.instructor?.name || 'Unixsigned',
             level: en.course.level,
             semester: en.course.semester,
             grade: en.grade || 'N/A',
@@ -187,6 +223,7 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
             include: {
                 course: {
                     include: {
+                        instructor: true,
                         assignments: {
                             orderBy: { dueDate: 'asc' }
                         }
@@ -258,7 +295,7 @@ export const submitProject = async (req: AuthRequest, res: Response) => {
 export const getSchedule = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
-        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
         const schedule = await Promise.all(days.map(async (day) => {
             const classes = await prisma.classSchedule.findMany({

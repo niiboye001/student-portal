@@ -18,6 +18,7 @@ const StudentManagement = () => {
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const filterMenuRef = useRef(null);
     const [openMenuId, setOpenMenuId] = useState(null);
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
     const rowMenuRef = useRef(null);
 
     const fetchStudents = async () => {
@@ -240,7 +241,20 @@ const StudentManagement = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setOpenMenuId(openMenuId === student.id ? null : student.id);
+                                                        if (openMenuId === student.id) {
+                                                            setOpenMenuId(null);
+                                                        } else {
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const spaceBelow = window.innerHeight - rect.bottom;
+                                                            const menuHeight = 100; // estimated
+                                                            const isUpwards = spaceBelow < menuHeight;
+
+                                                            setDropdownPos({
+                                                                top: isUpwards ? rect.top - 80 : rect.bottom + 5,
+                                                                left: rect.right - 192, // 192px = w-48
+                                                            });
+                                                            setOpenMenuId(student.id);
+                                                        }
                                                     }}
                                                     className="text-gray-400 hover:text-gray-600 transition-colors">
                                                     <MoreVertical size={20} />
@@ -249,11 +263,11 @@ const StudentManagement = () => {
                                                 {openMenuId === student.id && (
                                                     <div
                                                         ref={rowMenuRef}
-                                                        className={`absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1 ${filteredStudents.indexOf(student) >= filteredStudents.length - 2 && filteredStudents.length > 2
-                                                            ? 'bottom-full mb-2 origin-bottom-right'
-                                                            : 'mt-2 origin-top-right'
-                                                            }`}
-                                                        style={{ right: '0' }}
+                                                        className="fixed z-50 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-1 animate-in fade-in zoom-in-95 duration-100"
+                                                        style={{
+                                                            top: dropdownPos.top,
+                                                            left: dropdownPos.left,
+                                                        }}
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         <button

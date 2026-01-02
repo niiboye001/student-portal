@@ -14,6 +14,13 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
         // Redirect to dashboard (student or admin) if role not allowed
+        // Redirect to appropriate dashboard based on role
+        if (['STAFF', 'TUTOR'].includes(user.role)) {
+            return <Navigate to="/staff" replace />;
+        }
+        if (user.role === 'ADMIN') {
+            return <Navigate to="/admin" replace />;
+        }
         return <Navigate to="/" replace />;
     }
 

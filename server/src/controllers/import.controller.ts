@@ -3,6 +3,7 @@ import { parse } from 'csv-parse/sync';
 import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma';
 import { logAudit } from '../services/audit.service';
+import { generateUserId } from '../utils/id.utils';
 
 interface AuthRequest extends Request {
     user?: {
@@ -47,10 +48,13 @@ export const importStudents = async (req: Request, res: Response) => {
                     continue;
                 }
 
+                const username = await generateUserId('STUDENT');
+
                 await prisma.user.create({
                     data: {
                         name,
                         email,
+                        username,
                         password: defaultPassword,
                         role: 'STUDENT',
                         profile: { create: {} }
@@ -105,10 +109,15 @@ export const importStaff = async (req: Request, res: Response) => {
                 // Default to TUTOR if not specified or invalid
                 const userRole = (role === 'ADMIN' || role === 'TUTOR') ? role : 'TUTOR';
 
+                // For ADMIN imports, consider checking if we want a different prefix, 
+                // but for now re-purposing 'STF' for all staff-like roles or just TUTOR.
+                const username = await generateUserId(userRole === 'TUTOR' ? 'STAFF' : 'STAFF');
+
                 await prisma.user.create({
                     data: {
                         name,
                         email,
+                        username,
                         password: defaultPassword,
                         role: userRole,
                         profile: { create: {} }

@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
 import studentRoutes from './routes/student.routes';
 import adminRoutes from './routes/admin.routes';
+import staffRoutes from './routes/staff.routes';
 import { rateLimit } from 'express-rate-limit';
 
 const app = express();
@@ -40,6 +41,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/staff', staffRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

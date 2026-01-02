@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import api from '../../services/api';
-import { User, Search, MoreVertical, Plus, Briefcase, Mail, FileUp } from 'lucide-react';
+import { User, Search, MoreVertical, Plus, Briefcase, Mail, FileUp, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import CSVUploader from '../../components/CSVUploader';
@@ -13,6 +13,7 @@ const StaffManagement = () => {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [staffToDelete, setStaffToDelete] = useState(null);
     const menuRef = useRef(null);
@@ -56,8 +57,14 @@ const StaffManagement = () => {
                 await api.put(`/admin/staff/${selectedStaff.id}`, formData);
                 toast.success('Staff member updated successfully');
             } else {
-                await api.post('/admin/staff', formData);
-                toast.success('Staff member created successfully');
+                const { data } = await api.post('/admin/staff', formData);
+                toast.success(
+                    <div className="flex flex-col gap-1">
+                        <span className="font-bold">Staff member created!</span>
+                        <span className="text-sm">Username: <code className="bg-gray-100 px-1 rounded">{data.username}</code></span>
+                        <span className="text-sm">Default Password: <code className="bg-gray-100 px-1 rounded">Staff123!</code></span>
+                    </div>
+                    , { duration: 6000 });
             }
             setIsModalOpen(false);
             fetchStaff();
@@ -188,7 +195,7 @@ const StaffManagement = () => {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -242,7 +249,21 @@ const StaffManagement = () => {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setOpenMenuId(openMenuId === member.id ? null : member.id);
+                                                    if (openMenuId === member.id) {
+                                                        setOpenMenuId(null);
+                                                    } else {
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        // Calculate best position
+                                                        const spaceBelow = window.innerHeight - rect.bottom;
+                                                        const menuHeight = 100; // estimated
+                                                        const isUpwards = spaceBelow < menuHeight;
+
+                                                        setDropdownPos({
+                                                            top: isUpwards ? rect.top - 80 : rect.bottom + 5, // 80 approx height
+                                                            left: rect.right - 192, // 192px = w-48
+                                                        });
+                                                        setOpenMenuId(member.id);
+                                                    }
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
                                             >
@@ -252,11 +273,11 @@ const StaffManagement = () => {
                                             {openMenuId === member.id && (
                                                 <div
                                                     ref={menuRef}
-                                                    className={`absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1 text-left ${index >= filteredStaff.length - 2 && filteredStaff.length > 2
-                                                        ? 'bottom-full mb-2 origin-bottom-right'
-                                                        : 'mt-2 origin-top-right'
-                                                        }`}
-                                                    style={{ right: '1.5rem' }}
+                                                    className="fixed z-50 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-1 text-left animate-in fade-in zoom-in-95 duration-100"
+                                                    style={{
+                                                        top: dropdownPos.top,
+                                                        left: dropdownPos.left,
+                                                    }}
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     <button
@@ -270,6 +291,7 @@ const StaffManagement = () => {
                                                         onClick={() => handleDeleteClick(member)}
                                                         className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                                                     >
+                                                        <Trash2 size={16} />
                                                         Remove Staff
                                                     </button>
                                                 </div>

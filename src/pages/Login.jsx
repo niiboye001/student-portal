@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { z } from 'zod';
-import { Lock, Mail, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
-    email: z.string().email('Please enter a valid email address'),
+    userId: z.string().min(1, 'User ID is required'),
     password: z.string().min(1, 'Password is required')
 });
 
 const Login = () => {
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [formData, setFormData] = useState({ userId: '', password: '' });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [authError, setAuthError] = useState('');
@@ -46,11 +46,12 @@ const Login = () => {
 
         setIsLoading(true);
         try {
-            const result = await login(formData.email, formData.password);
+            const result = await login(formData.userId, formData.password);
             if (result.success) {
                 const destination = location.state?.from?.pathname
                     ? location.state.from.pathname
-                    : (result.user.role === 'ADMIN' ? '/admin' : '/');
+                    : (result.user.role === 'ADMIN' ? '/admin'
+                        : (['STAFF', 'TUTOR'].includes(result.user.role) ? '/staff' : '/'));
 
                 navigate(destination, { replace: true });
             } else {
@@ -88,20 +89,20 @@ const Login = () => {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">User ID</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
+                                <User className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={20} />
                                 <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
+                                    type="text"
+                                    name="userId"
+                                    value={formData.userId}
                                     onChange={handleChange}
-                                    placeholder="name@university.edu"
-                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${errors.email ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
+                                    placeholder="e.g. STND-12345"
+                                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${errors.userId ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-gray-600'
                                         }`}
                                 />
                             </div>
-                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                            {errors.userId && <p className="text-red-500 text-xs mt-1">{errors.userId}</p>}
                         </div>
 
                         <div className="space-y-2">

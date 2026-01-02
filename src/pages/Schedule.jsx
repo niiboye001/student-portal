@@ -2,14 +2,18 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Clock, MapPin } from 'lucide-react';
 
+import { useAuth } from '../contexts/AuthContext';
+
 const Schedule = () => {
+    const { user } = useAuth();
     const [weeklySchedule, setWeeklySchedule] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchSchedule = async () => {
             try {
-                const response = await api.get('/student/schedule');
+                const endpoint = user?.role === 'STUDENT' ? '/student/schedule' : '/staff/schedule';
+                const response = await api.get(endpoint);
                 setWeeklySchedule(response.data);
             } catch (error) {
                 console.error('Error fetching schedule', error);
