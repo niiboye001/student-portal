@@ -3,7 +3,10 @@ import api from '../services/api';
 import StatCard from '../components/StatCard';
 import { GraduationCap, Clock, Award, TrendingUp, Calendar, Bell, BookOpen } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
+
 const Dashboard = () => {
+    const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
@@ -72,7 +75,7 @@ const Dashboard = () => {
                             <Calendar size={20} className="text-blue-600 dark:text-blue-400" />
                             Upcoming Classes
                         </h2>
-                        <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">View Schedule</button>
+                        <button onClick={() => navigate('/schedule')} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">View Schedule</button>
                     </div>
                     <div className="space-y-4">
                         {upcomingClasses.map((cls) => (

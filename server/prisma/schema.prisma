@@ -23,6 +23,7 @@ model User {
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
   taughtCourses    Course[]       @relation("InstructorCourses")
+  submissions      Submission[]
 }
 
 model Profile {
@@ -93,9 +94,27 @@ model Assignment {
   courseId    String
   status      String   @default("PENDING")
   grade       String?
+  submissions Submission[]
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
+}
+
+model Submission {
+  id          String   @id @default(uuid())
+  content     String   // URL or text
+  feedback    String?
+  grade       String?
+  submittedAt DateTime @default(now())
+  
+  assignmentId String
+  studentId    String
+
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student      User       @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
 }
 
 model AuditLog {

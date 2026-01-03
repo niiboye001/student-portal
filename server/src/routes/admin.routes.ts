@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAdminStats, getAllStudents, getAllCourses, createStudent, deleteStudent, updateStudent, createCourse, updateCourse, deleteCourse, enrollStudent, getCourseEnrollments, deleteEnrollment, createStaff, getAllStaff, updateStaff, deleteStaff } from '../controllers/admin.controller';
+import { getAdminStats, getAllStudents, getAllCourses, createStudent, deleteStudent, updateStudent, createCourse, updateCourse, deleteCourse, enrollStudent, getCourseEnrollments, deleteEnrollment, createStaff, getAllStaff, updateStaff, deleteStaff, resetUserPassword } from '../controllers/admin.controller';
 import { getAuditLogs, getAuditStats } from '../controllers/audit.controller';
 import { importStudents, importCourses, importStaff } from '../controllers/import.controller';
 import { getAnnouncements, createAnnouncement, deleteAnnouncement } from '../controllers/announcement.controller';

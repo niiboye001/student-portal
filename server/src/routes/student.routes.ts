@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDashboardData, getCourses, getSchedule, getProfile, updateProfile, getCourseDetails, submitProject, getAssignments } from '../controllers/student.controller';
+import { getDashboardData, getCourses, getSchedule, getProfile, updateProfile, getCourseDetails, submitAssignment, getAssignments } from '../controllers/student.controller';
 import { getAnnouncements } from '../controllers/announcement.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
@@ -11,7 +11,7 @@ router.use(authenticateToken);
 router.get('/dashboard', getDashboardData);
 router.get('/courses', getCourses);
 router.get('/courses/:id', getCourseDetails);
-router.post('/courses/:id/submit', submitProject);
+router.post('/courses/:id/assignments/:assignmentId/submit', submitAssignment);
 router.get('/schedule', getSchedule);
 router.get('/assignments', getAssignments);
 router.get('/profile', getProfile);

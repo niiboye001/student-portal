@@ -36,6 +36,17 @@ const StaffCourseDetails = () => {
         status: 'PENDING'
     });
 
+    // Submission Review State
+    const [submissionsModalOpen, setSubmissionsModalOpen] = useState(false);
+    const [selectedAssignmentForReview, setSelectedAssignmentForReview] = useState(null);
+    const [submissions, setSubmissions] = useState([]);
+    const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+    // Grading State
+    const [gradingStudent, setGradingStudent] = useState(null); // The student being graded
+    const [gradingForm, setGradingForm] = useState({ grade: '', feedback: '' });
+    const [submittingGrade, setSubmittingGrade] = useState(false);
+
     const fetchDetails = async () => {
         try {
             const { data } = await api.get(`/staff/courses/${id}`);
@@ -134,6 +145,52 @@ const StaffCourseDetails = () => {
         setDeleteModalOpen(true);
     };
 
+    const handleOpenGrading = (studentItem) => {
+        setGradingStudent(studentItem);
+        setGradingForm({
+            grade: studentItem.submission?.grade || '',
+            feedback: studentItem.submission?.feedback || ''
+        });
+    };
+
+    const handleSubmitGrade = async (e) => {
+        e.preventDefault();
+        setSubmittingGrade(true);
+        const loadingToast = toast.loading('Saving grade...');
+
+        try {
+            await api.post(`/staff/courses/${id}/assignments/${selectedAssignmentForReview.id}/submissions/${gradingStudent.student.id}/grade`, gradingForm);
+
+            toast.success('Grade saved successfully', { id: loadingToast });
+
+            // Refresh submissions list
+            const { data } = await api.get(`/staff/courses/${id}/assignments/${selectedAssignmentForReview.id}/submissions`);
+            setSubmissions(data); // Refresh list
+            setGradingStudent(null); // Close grading form
+
+        } catch (error) {
+            console.error('Error saving grade:', error);
+            toast.error('Failed to save grade', { id: loadingToast });
+        } finally {
+            setSubmittingGrade(false);
+        }
+    };
+
+    const handleViewSubmissions = async (assignment) => {
+        setSelectedAssignmentForReview(assignment);
+        setSubmissionsModalOpen(true);
+        setLoadingSubmissions(true);
+        try {
+            const { data } = await api.get(`/staff/courses/${id}/assignments/${assignment.id}/submissions`);
+            setSubmissions(data);
+        } catch (error) {
+            console.error('Error fetching submissions:', error);
+            toast.error('Failed to load submissions');
+        } finally {
+            setLoadingSubmissions(false);
+        }
+    };
+
     if (loading) return <div className="p-8 text-center text-gray-500">Loading course details...</div>;
     if (!course) return <div className="p-8 text-center text-gray-500">Course not found.</div>;
 
@@ -211,38 +268,35 @@ const StaffCourseDetails = () => {
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                                 <tr>
-                                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student Name</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Enrolled On</th>
+                                    <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student Name</th>
+                                    <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+                                    <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Enrolled On</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {course.enrollments && course.enrollments.length > 0 ? (
-                                    course.enrollments.map((en) => (
-                                        <tr key={en.user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0 text-xs">
-                                                        {en.user.name.charAt(0)}
+                                    course.enrollments.map((enrollment, index) => (
+                                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold mr-3">
+                                                        {enrollment.user.name.charAt(0)}
                                                     </div>
-                                                    <span className="font-medium text-gray-900 dark:text-white">{en.user.name}</span>
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">{enrollment.user.name}</div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                <div className="flex items-center gap-2">
-                                                    <Mail size={14} />
-                                                    {en.user.email}
-                                                </div>
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {enrollment.user.email}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {new Date(en.user.createdAt).toLocaleDateString()}
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {new Date(enrollment.enrolledAt).toLocaleDateString()}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td colSpan="3" className="px-6 py-12 text-center text-gray-500">
-                                            No students enrolled in this course yet.
+                                            No students enrolled yet.
                                         </td>
                                     </tr>
                                 )}
@@ -342,13 +396,21 @@ const StaffCourseDetails = () => {
                                                 Due: {new Date(assignment.dueDate).toLocaleDateString()}
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleDeleteAssignmentClick(assignment)}
-                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                            title="Delete assignment"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleViewSubmissions(assignment)}
+                                                className="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
+                                            >
+                                                View Submissions
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteAssignmentClick(assignment)}
+                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                title="Delete assignment"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -503,6 +565,129 @@ const StaffCourseDetails = () => {
                                 {submitting ? 'Creating...' : 'Create Assignment'}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Submissions Review Modal */}
+            {submissionsModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-7xl overflow-hidden h-[80vh] flex flex-col">
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 shrink-0">
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white">Submission Review</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedAssignmentForReview?.title}</p>
+                            </div>
+                            <button onClick={() => setSubmissionsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-0">
+                            {loadingSubmissions ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                </div>
+                            ) : (
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                                        <tr>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Submitted At</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">Content</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                        {submissions.map((item) => (
+                                            <tr key={item.student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    <div className="font-medium text-gray-900 dark:text-white">{item.student.name}</div>
+                                                    <div className="text-xs text-gray-500">{item.student.email}</div>
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    <span className={`px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${item.status === 'GRADED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                                                        item.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                                        }`}>
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    {item.submission?.submittedAt ? new Date(item.submission.submittedAt).toLocaleString() : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 break-words whitespace-pre-wrap min-w-[300px]">
+                                                    {item.submission?.content || '-'}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
+                                                    {item.submission?.grade || '-'}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                                    <button
+                                                        onClick={() => handleOpenGrading(item)}
+                                                        disabled={!item.submission}
+                                                        className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                                    >
+                                                        {item.submission?.grade ? 'Edit Grade' : 'Grade'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+
+                        {/* Grading Form Drawer/Footer */}
+                        {gradingStudent && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-700/50 animate-slide-up">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="font-bold text-gray-900 dark:text-white">
+                                        Grading: <span className="text-blue-600 dark:text-blue-400">{gradingStudent.student.name}</span>
+                                    </h4>
+                                    <button onClick={() => setGradingStudent(null)} className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                        Cancel
+                                    </button>
+                                </div>
+                                <form onSubmit={handleSubmitGrade} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase">Grade</label>
+                                        <select
+                                            required
+                                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                            value={gradingForm.grade}
+                                            onChange={(e) => setGradingForm({ ...gradingForm, grade: e.target.value })}
+                                        >
+                                            <option value="">Select Grade</option>
+                                            {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'].map(g => (
+                                                <option key={g} value={g}>{g}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase">Feedback</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Great work! Maybe consider..."
+                                            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                            value={gradingForm.feedback}
+                                            onChange={(e) => setGradingForm({ ...gradingForm, feedback: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="flex items-end">
+                                        <button
+                                            type="submit"
+                                            disabled={submittingGrade}
+                                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg text-sm shadow-sm transition-colors disabled:opacity-50"
+                                        >
+                                            {submittingGrade ? 'Saving...' : 'Save Grade'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

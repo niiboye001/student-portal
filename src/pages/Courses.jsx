@@ -168,26 +168,26 @@ const Courses = () => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Course Name</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Code</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Progress</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Grade</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Action</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Course Name</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Code</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Progress</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Grade</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {courses.map((course) => (
                                 <tr key={course.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <div className="font-medium text-gray-900 dark:text-white">{course.name}</div>
                                         <div className="text-sm text-gray-500 dark:text-gray-400">{course.instructor || 'Staff'}</div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs font-bold font-mono">
                                             {course.code}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 w-1/4">
+                                    <td className="px-4 py-3 w-1/4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                                                 <div
@@ -198,12 +198,12 @@ const Courses = () => {
                                             <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{course.progress}%</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getGradeColor(course.grade)}`}>
                                             {course.grade}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <button
                                             onClick={() => handleViewDetails(course.id)}
                                             className="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center gap-1 group"

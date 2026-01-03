@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { sendGradeNotification } from '../services/email.service';
+import { updateEnrollmentStats } from '../utils/enrollment-stats';
 
 interface AuthRequest extends Request {
     user?: {
@@ -323,9 +325,158 @@ export const deleteAssignment = async (req: Request, res: Response) => {
             where: { id: assignmentId }
         });
 
+
         res.json({ message: 'Assignment deleted successfully' });
     } catch (error) {
         console.error('Delete assignment error:', error);
         res.status(500).json({ message: 'Error deleting assignment' });
+    }
+};
+
+export const getAssignmentSubmissions = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id, assignmentId } = req.params;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        // Verify ownership
+        const course = await prisma.course.findFirst({
+            where: { id, instructorId: userId }
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found or unauthorized' });
+        }
+
+        // Fetch submissions including student info
+        const submissions = await prisma.submission.findMany({
+            where: { assignmentId },
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: { submittedAt: 'desc' }
+        });
+
+        // Also fetch all students to show who hasn't submitted yet
+        const enrollments = await prisma.enrollment.findMany({
+            where: { courseId: id },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: { user: { name: 'asc' } }
+        });
+
+        // Combine data
+        const studentSubmissions = enrollments.map(enrollment => {
+            const submission = submissions.find(s => s.studentId === enrollment.userId);
+            return {
+                student: enrollment.user,
+                submission: submission || null,
+                status: submission ? (submission.grade ? 'GRADED' : 'SUBMITTED') : 'MISSING' // Simple missing logic for now
+            };
+        });
+
+        res.json(studentSubmissions);
+
+    } catch (error) {
+        console.error('Get submissions error:', error);
+        res.status(500).json({ message: 'Error fetching submissions' });
+    }
+};
+
+export const gradeSubmission = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id, assignmentId, submissionId } = req.params; // submissionId is actually studentId in our schema logic or the actual submission id.
+        // Wait, schema says @@id([assignmentId, studentId]). 
+        // But we probably want to pass studentId to identify the submission if we don't have a single PK.
+        // Actually, let's check schema/previous code. 
+        // upsert uses assignmentId_studentId.
+        // The submission list returns the submission object which has createdAt etc.
+        // But since it is a compound key, passing studentId is cleaner if we don't expose a generated ID.
+        // Howerver, standard practice might be simpler.
+        // Let's look at getAssignmentSubmissions response. It returns `submission: { ... }`.
+        // Let's pass `studentId` in the body or params to identify strictly.
+        // Actually, let's use the route: /:assignmentId/submissions/:studentId/grade 
+        // Because one student one submission per assignment usually.
+
+        const { grade, feedback } = req.body;
+        const studentId = req.params.studentId;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        // Verify ownership of course
+        const course = await prisma.course.findFirst({
+            where: { id, instructorId: userId }
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found or unauthorized' });
+        }
+
+        // Update Submission
+        const submission = await prisma.submission.update({
+            where: {
+                assignmentId_studentId: {
+                    assignmentId,
+                    studentId
+                }
+            },
+            data: {
+                grade,
+                feedback
+            },
+            include: {
+                student: true,
+                assignment: true
+            }
+        });
+
+        // Send Email Notification
+        if (submission.student.email) {
+            // Import dynamically or at top if possible, but for minimal diff we can use dynamic or ensuring import at top
+            // Better to add import at top in next step or now if replace allows.
+            // Using dynamic import for safety in this chunk or assume I'll add import.
+            // Let's rely on the IDE to help or just add the import at the top in a separate call.
+            // Actually, I'll add the logic here and then add the import.
+
+            // Wait, I can't use dynamic import easily in TS without configuration sometimes. 
+            // I'll add the call here and add the import in the next tool call.
+        }
+
+        // We need the email service. 
+        // Let's modify the response to include sending email.
+
+        try {
+            await sendGradeNotification(submission.student.email, submission.assignment.title, grade, feedback);
+            // Update enrollment stats (grade and progress)
+            await updateEnrollmentStats(submission.studentId, submission.assignment.courseId);
+        } catch (emailError) {
+            console.error('Failed to send email notification or update stats', emailError);
+            // Don't fail the request if email/stats fails
+        }
+
+        res.json(submission);
+
+    } catch (error) {
+        console.error('Grade submission error:', error);
+        res.status(500).json({ message: 'Error grading submission' });
     }
 };

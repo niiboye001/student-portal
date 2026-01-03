@@ -34,13 +34,7 @@ const StudentModal = ({ isOpen, onClose, onSuccess, student = null }) => {
                 toast.success('Student updated successfully');
             } else {
                 const { data } = await api.post('/admin/students', formData);
-                toast.success(
-                    <div className="flex flex-col gap-1">
-                        <span className="font-bold">Student registered successfully!</span>
-                        <span className="text-sm">Username: <code className="bg-gray-100 px-1 rounded">{data.username}</code></span>
-                        <span className="text-sm">Default Password: <code className="bg-gray-100 px-1 rounded">Student123!</code></span>
-                    </div>
-                    , { duration: 6000 });
+                toast.success('Student registered successfully! Credentials sent to email.', { duration: 4000 });
             }
             onSuccess();
             onClose();

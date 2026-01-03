@@ -1,0 +1,9 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+Loading .env from: C:\Users\Nii Boye\Desktop\projects\stdportal\server\.env
+EMAIL_USER present: true
+EMAIL_PASS present: true
+Sending from kulaani.sharp@gmail.com...
+Error: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 4fb4d7f45d1cf-64b91494c03sm47393646a12.18 - gsmtp
+Response: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 4fb4d7f45d1cf-64b91494c03sm47393646a12.18 - gsmtp

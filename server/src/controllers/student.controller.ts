@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma';
+import { updateEnrollmentStats } from '../utils/enrollment-stats';
 
 interface AuthRequest extends Request {
     user?: {
@@ -225,6 +226,11 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
                     include: {
                         instructor: true,
                         assignments: {
+                            include: {
+                                submissions: {
+                                    where: { studentId: userId }
+                                }
+                            },
                             orderBy: { dueDate: 'asc' }
                         }
                     }
@@ -247,12 +253,33 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
                 "Module 3: Advanced Applications",
                 "Module 4: Final Project and Review"
             ],
-            upcomingAssignments: enrollment.course.assignments.map(a => ({
-                id: a.id,
-                title: a.title,
-                dueDate: new Date(a.dueDate).toLocaleDateString(),
-                status: a.status
-            }))
+            upcomingAssignments: enrollment.course.assignments.map(a => {
+                const submission = a.submissions[0];
+                let status = a.status;
+                const now = new Date();
+                const due = new Date(a.dueDate);
+
+                if (submission) {
+                    if (submission.grade) {
+                        status = 'GRADED';
+                    } else if (new Date(submission.submittedAt) > due) {
+                        status = 'LATE';
+                    } else {
+                        status = 'SUBMITTED';
+                    }
+                } else if (now > due) {
+                    status = 'MISSING';
+                }
+
+                return {
+                    id: a.id,
+                    title: a.title,
+                    description: a.description,
+                    dueDate: due.toLocaleDateString(),
+                    status: status,
+                    submission: submission || null
+                };
+            })
         };
 
         res.json(detailedCourse);
@@ -262,33 +289,65 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const submitProject = async (req: AuthRequest, res: Response) => {
+export const submitAssignment = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const { id, assignmentId } = req.params; // id is courseId (unused but keeps REST path), assignmentId
         const userId = req.user?.userId;
+        const { content } = req.body;
 
-        // Verify enrollment
-        const enrollment = await prisma.enrollment.findFirst({
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        // Check if assignment exists
+        const assignment = await prisma.assignment.findUnique({
+            where: { id: assignmentId }
+        });
+
+        if (!assignment) {
+            return res.status(404).json({ message: 'Assignment not found' });
+        }
+
+        // Check existing submission
+        const existingSubmission = await prisma.submission.findUnique({
             where: {
-                userId,
-                courseId: id
+                assignmentId_studentId: {
+                    assignmentId,
+                    studentId: userId
+                }
             }
         });
 
-        if (!enrollment) {
-            return res.status(404).json({ message: 'Course enrollment not found' });
+        if (existingSubmission && existingSubmission.grade) {
+            return res.status(400).json({ message: 'Cannot resubmit a graded assignment' });
         }
 
-        // Simulate file processing delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Create or Update Submission
+        const submission = await prisma.submission.upsert({
+            where: {
+                assignmentId_studentId: {
+                    assignmentId,
+                    studentId: userId
+                }
+            },
+            update: {
+                content,
+                submittedAt: new Date()
+            },
+            create: {
+                assignmentId,
+                studentId: userId,
+                content
+            }
+        });
 
-        console.log(`[SUBMISSION] User ${userId} submitted project for Course ${id}`);
+        // Update enrollment stats (progress)
+        await updateEnrollmentStats(userId, assignment.courseId);
 
-        // In a real app, you'd save the file reference or update the enrollment status
-        res.json({ message: 'Project submitted successfully!' });
+        res.json(submission);
     } catch (error) {
         console.error('Submission error:', error);
-        res.status(500).json({ message: 'Failed to submit project' });
+        res.status(500).json({ message: 'Failed to submit assignment' });
     }
 };
 
@@ -338,12 +397,49 @@ export const getAssignments = async (req: AuthRequest, res: Response) => {
                     }
                 }
             },
-            include: { course: true },
+            include: {
+                course: true,
+                submissions: {
+                    where: { studentId: userId }
+                }
+            },
             orderBy: { dueDate: 'asc' }
         });
 
-        res.json(assignments);
+        const assignmentsWithStatus = assignments.map(a => {
+            const submission = a.submissions[0];
+            let status = a.status; // Default (e.g., PENDING)
+            const now = new Date();
+            const due = new Date(a.dueDate);
+
+            if (submission) {
+                if (submission.grade) {
+                    status = 'GRADED';
+                } else if (new Date(submission.submittedAt) > due) {
+                    status = 'LATE';
+                } else {
+                    status = 'SUBMITTED';
+                }
+            } else if (now > due) {
+                status = 'MISSING';
+            }
+
+            return {
+                id: a.id,
+                title: a.title,
+                description: a.description,
+                dueDate: a.dueDate,
+                status: status,
+                course: a.course,
+                courseId: a.courseId,
+                grade: submission?.grade, // Include grade if available
+                submission: submission || null
+            };
+        });
+
+        res.json(assignmentsWithStatus);
     } catch (error) {
+        console.error('Error fetching assignments:', error);
         res.status(500).json({ message: 'Error fetching assignments' });
     }
 };

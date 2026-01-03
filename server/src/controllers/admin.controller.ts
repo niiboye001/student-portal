@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import bcrypt from 'bcryptjs';
 import { logAudit } from '../services/audit.service';
 import { generateUserId } from '../utils/id.utils';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.service';
 
 interface AuthRequest extends Request {
     user?: {
@@ -10,6 +11,30 @@ interface AuthRequest extends Request {
         role: string;
     };
 }
+
+export const resetUserPassword = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const defaultPassword = 'Password123!';
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+        await prisma.user.update({
+            where: { id },
+            data: { password: hashedPassword }
+        });
+
+        // Fetch user to get email and name for notification
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (user && user.email) {
+            await sendPasswordResetEmail(user.email, user.name);
+        }
+
+        res.json({ message: `Password reset to ${defaultPassword}` });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Error resetting password' });
+    }
+};
 
 export const createStudent = async (req: Request, res: Response) => {
     try {
@@ -52,6 +77,10 @@ export const createStudent = async (req: Request, res: Response) => {
         // Log Audit
         if ((req as AuthRequest).user) {
             await logAudit((req as AuthRequest).user!.userId, 'CREATE_STUDENT', 'USER', { studentId: newUser.id, email: newUser.email }, req.ip);
+        }
+
+        if (newUser.email) {
+            await sendWelcomeEmail(newUser.email, newUser.name, newUser.username, 'STUDENT');
         }
 
         res.status(201).json(newUser);
@@ -395,6 +424,10 @@ export const createStaff = async (req: Request, res: Response) => {
         // Log Audit
         if ((req as AuthRequest).user) {
             await logAudit((req as AuthRequest).user!.userId, 'CREATE_STAFF', 'USER', { staffId: newStaff.id, email: newStaff.email }, req.ip);
+        }
+
+        if (newStaff.email) {
+            await sendWelcomeEmail(newStaff.email, newStaff.name, newStaff.username, 'TUTOR');
         }
     } catch (error) {
         console.error('Create staff error:', error);

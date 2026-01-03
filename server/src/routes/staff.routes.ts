@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getMyCourses, getStaffStats, getCourseDetails, getMySchedule, addClassSchedule, removeClassSchedule, createAssignment, deleteAssignment } from '../controllers/staff.controller';
+import { getMyCourses, getStaffStats, getCourseDetails, getMySchedule, addClassSchedule, removeClassSchedule, createAssignment, deleteAssignment, getAssignmentSubmissions, gradeSubmission } from '../controllers/staff.controller';
 import { authenticateToken, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -27,5 +27,11 @@ router.post('/courses/:id/assignments', authenticateToken, authorize('TUTOR', 'A
 
 // Delete assignment
 router.delete('/courses/:id/assignments/:assignmentId', authenticateToken, authorize('TUTOR', 'ADMIN'), deleteAssignment);
+
+// Get assignment submissions
+router.get('/courses/:id/assignments/:assignmentId/submissions', authenticateToken, authorize('TUTOR', 'ADMIN'), getAssignmentSubmissions);
+
+// Grade a submission
+router.post('/courses/:id/assignments/:assignmentId/submissions/:studentId/grade', authenticateToken, authorize('TUTOR', 'ADMIN'), gradeSubmission);
 
 export default router;

@@ -79,24 +79,24 @@ const AuditLogs = () => {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                             <tr>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Timestamp</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">User</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Action</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">Details</th>
-                                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">IP Address</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Timestamp</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">User</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Action</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Details</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">IP Address</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                             {logs.length > 0 ? (
                                 logs.map((log) => (
                                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                        <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                                             <div className="flex items-center gap-2">
                                                 <Clock size={14} className="text-gray-400" />
                                                 {new Date(log.createdAt).toLocaleString()}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-300">
                                                     {log.user?.name?.[0] || '?'}
@@ -106,7 +106,7 @@ const AuditLogs = () => {
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${log.action.includes('DELETE') ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
                                                 log.action.includes('CREATE') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                                                     'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'

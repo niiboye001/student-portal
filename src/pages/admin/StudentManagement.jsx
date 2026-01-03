@@ -84,6 +84,30 @@ const StudentManagement = () => {
         setOpenMenuId(null);
     };
 
+    const [resetModalOpen, setResetModalOpen] = useState(false);
+    const [userToReset, setUserToReset] = useState(null);
+
+    const handleResetPassword = (student) => {
+        setUserToReset(student);
+        setResetModalOpen(true);
+        setOpenMenuId(null);
+    };
+
+    const confirmResetPassword = async () => {
+        if (!userToReset) return;
+
+        const loadingToast = toast.loading('Resetting password...');
+        try {
+            const { data } = await api.post(`/admin/users/${userToReset.id}/reset-password`);
+            toast.success('Password reset successfully! New credentials sent to email.', { id: loadingToast, duration: 4000 });
+            setResetModalOpen(false);
+            setUserToReset(null);
+        } catch (error) {
+            console.error('Reset password error:', error);
+            toast.error(error.response?.data?.message || 'Failed to reset password', { id: loadingToast });
+        }
+    };
+
     const handleRegisterClick = () => {
         setSelectedStudent(null);
         setIsModalOpen(true);
@@ -206,17 +230,17 @@ const StudentManagement = () => {
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-gray-50 dark:bg-gray-700/50">
                             <tr>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Student</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Email</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Registered on</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Actions</th>
+                                <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Student</th>
+                                <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Email</th>
+                                <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Registered on</th>
+                                <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                             {filteredStudents.length > 0 ? (
                                 filteredStudents.map((student) => (
                                     <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-bold">
                                                     {student.name.charAt(0)}
@@ -224,19 +248,19 @@ const StudentManagement = () => {
                                                 <span className="font-medium text-gray-900 dark:text-white">{student.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                                             <div className="flex items-center gap-2">
                                                 <Mail size={14} />
                                                 {student.email}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                                             <div className="flex items-center gap-2">
                                                 <Calendar size={14} />
                                                 {new Date(student.createdAt).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <div className="relative">
                                                 <button
                                                     onClick={(e) => {
@@ -275,6 +299,13 @@ const StudentManagement = () => {
                                                             className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                                                             <Edit size={16} />
                                                             Edit Student
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleResetPassword(student)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center gap-2"
+                                                        >
+                                                            <span className="font-bold">Key</span>
+                                                            Reset Password
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteClick(student)}
@@ -316,6 +347,16 @@ const StudentManagement = () => {
                 message={`Are you sure you want to delete ${studentToDelete?.name}? This action cannot be undone.`}
                 confirmText="Delete Student"
                 isDanger={true}
+            />
+
+            <ConfirmationModal
+                isOpen={!!resetModalOpen}
+                onClose={() => setResetModalOpen(false)}
+                onConfirm={confirmResetPassword}
+                title="Reset Password"
+                message={`Are you sure you want to reset the password for ${userToReset?.name}? It will be set to 'Password123!' and emailed to them.`}
+                confirmText="Reset Password"
+                isDanger={false}
             />
 
             <CSVUploader

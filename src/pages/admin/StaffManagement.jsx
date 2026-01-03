@@ -58,13 +58,7 @@ const StaffManagement = () => {
                 toast.success('Staff member updated successfully');
             } else {
                 const { data } = await api.post('/admin/staff', formData);
-                toast.success(
-                    <div className="flex flex-col gap-1">
-                        <span className="font-bold">Staff member created!</span>
-                        <span className="text-sm">Username: <code className="bg-gray-100 px-1 rounded">{data.username}</code></span>
-                        <span className="text-sm">Default Password: <code className="bg-gray-100 px-1 rounded">Staff123!</code></span>
-                    </div>
-                    , { duration: 6000 });
+                toast.success('Staff member created! Credentials sent to email.', { duration: 4000 });
             }
             setIsModalOpen(false);
             fetchStaff();
@@ -96,6 +90,30 @@ const StaffManagement = () => {
         setSelectedStaff(staffMember);
         setIsModalOpen(true);
         setOpenMenuId(null);
+    };
+
+    const [resetModalOpen, setResetModalOpen] = useState(false);
+    const [staffToReset, setStaffToReset] = useState(null);
+
+    const handleResetPassword = (member) => {
+        setStaffToReset(member);
+        setResetModalOpen(true);
+        setOpenMenuId(null);
+    };
+
+    const confirmResetPassword = async () => {
+        if (!staffToReset) return;
+
+        const loadingToast = toast.loading('Resetting password...');
+        try {
+            const { data } = await api.post(`/admin/users/${staffToReset.id}/reset-password`);
+            toast.success('Password reset successfully! New credentials sent to email.', { id: loadingToast, duration: 4000 });
+            setResetModalOpen(false);
+            setStaffToReset(null);
+        } catch (error) {
+            console.error('Reset password error:', error);
+            toast.error(error.response?.data?.message || 'Failed to reset password', { id: loadingToast });
+        }
     };
 
     const openCreateModal = () => {
@@ -213,17 +231,17 @@ const StaffManagement = () => {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                             {filteredStaff.length > 0 ? (
                                 filteredStaff.map((member, index) => (
                                     <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 py-3 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
                                                     {member.name.charAt(0)}
@@ -236,16 +254,16 @@ const StaffManagement = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 py-3 whitespace-nowrap">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                 <Briefcase size={12} className="mr-1" />
                                                 TUTOR
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {new Date(member.createdAt).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right relative">
+                                        <td className="px-4 py-3 whitespace-nowrap text-right relative">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -288,6 +306,13 @@ const StaffManagement = () => {
                                                         Edit Staff
                                                     </button>
                                                     <button
+                                                        onClick={() => handleResetPassword(member)}
+                                                        className="w-full text-left px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center gap-2"
+                                                    >
+                                                        <span className="font-bold">Key</span>
+                                                        Reset Password
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleDeleteClick(member)}
                                                         className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                                                     >
@@ -325,6 +350,16 @@ const StaffManagement = () => {
                 message={`Are you sure you want to delete ${staffToDelete?.name}? This action cannot be undone.`}
                 confirmText="Delete Staff"
                 isDanger={true}
+            />
+
+            <ConfirmationModal
+                isOpen={!!resetModalOpen}
+                onClose={() => setResetModalOpen(false)}
+                onConfirm={confirmResetPassword}
+                title="Reset Password"
+                message={`Are you sure you want to reset the password for ${staffToReset?.name}? It will be set to 'Password123!' and emailed to them.`}
+                confirmText="Reset Password"
+                isDanger={false}
             />
 
             <CSVUploader

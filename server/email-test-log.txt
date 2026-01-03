@@ -1,0 +1,6 @@
+[dotenv@17.2.3] injecting env (6) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+Loading .env from: C:\Users\Nii Boye\Desktop\projects\stdportal\server\.env
+EMAIL_USER: kulaani.sharp@gmail.com
+EMAIL_PASS present: true
+Sending from kulaani.sharp@gmail.com...
+Success! Email sent.
