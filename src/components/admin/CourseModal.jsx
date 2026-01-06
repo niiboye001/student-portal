@@ -11,23 +11,29 @@ const CourseModal = ({ isOpen, onClose, onSuccess, course = null }) => {
         instructorId: '',
         level: 100,
         semester: 1,
-        credits: 3
+        credits: 3,
+        programIds: []
     });
     const [loading, setLoading] = useState(false);
     const [staff, setStaff] = useState([]);
+    const [programs, setPrograms] = useState([]);
 
     useEffect(() => {
         if (isOpen) {
-            fetchStaff();
+            fetchData();
         }
     }, [isOpen]);
 
-    const fetchStaff = async () => {
+    const fetchData = async () => {
         try {
-            const { data } = await api.get('/admin/staff');
-            setStaff(data);
+            const [staffRes, progRes] = await Promise.all([
+                api.get('/admin/staff'),
+                api.get('/academic/programs')
+            ]);
+            setStaff(staffRes.data);
+            setPrograms(progRes.data);
         } catch (error) {
-            console.error('Failed to load staff', error);
+            console.error('Failed to load data', error);
         }
     };
 
@@ -40,10 +46,11 @@ const CourseModal = ({ isOpen, onClose, onSuccess, course = null }) => {
                 instructorId: course.instructor?.id || '',
                 level: course.level || 100,
                 semester: course.semester || 1,
-                credits: course.credits || 3
+                credits: course.credits || 3,
+                programIds: course.programs?.map(p => p.id) || []
             });
         } else {
-            setFormData({ name: '', code: '', description: '', instructorId: '', level: 100, semester: 1, credits: 3 });
+            setFormData({ name: '', code: '', description: '', instructorId: '', level: 100, semester: 1, credits: 3, programIds: [] });
         }
     }, [course, isOpen]);
 
@@ -79,9 +86,9 @@ const CourseModal = ({ isOpen, onClose, onSuccess, course = null }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh]">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
                     <h2 className="text-xl font-bold text-gray-900">
                         {isEdit ? 'Edit Course' : 'Create New Course'}
                     </h2>
@@ -90,7 +97,7 @@ const CourseModal = ({ isOpen, onClose, onSuccess, course = null }) => {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Course Code</label>
@@ -195,7 +202,36 @@ const CourseModal = ({ isOpen, onClose, onSuccess, course = null }) => {
                         </div>
                     </div>
 
-                    <div className="pt-4 flex gap-3">
+                    <div className="space-y-2 col-span-1 md:col-span-2">
+                        <label className="text-sm font-medium text-gray-700">Target Programs (Curriculum)</label>
+                        <div className="border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto bg-gray-50/50">
+                            {programs.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {programs.map(prog => (
+                                        <label key={prog.id} className="flex items-center gap-2 p-2 rounded hover:bg-white transition-colors cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                                                checked={formData.programIds.includes(prog.id)}
+                                                onChange={(e) => {
+                                                    const newIds = e.target.checked
+                                                        ? [...formData.programIds, prog.id]
+                                                        : formData.programIds.filter(id => id !== prog.id);
+                                                    setFormData({ ...formData, programIds: newIds });
+                                                }}
+                                            />
+                                            <span className="text-sm text-gray-700">{prog.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-400 text-center py-2">No programs available.</p>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-500">Select which programs this course belongs to.</p>
+                    </div>
+
+                    <div className="pt-4 flex gap-3 shrink-0">
                         <button
                             type="button"
                             onClick={onClose}

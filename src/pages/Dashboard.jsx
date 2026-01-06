@@ -121,6 +121,10 @@ const Dashboard = () => {
                                     <span className="text-xs text-gray-400">{ann.date}</span>
                                 </div>
                                 <h3 className="mt-2 font-medium text-gray-900 dark:text-white">{ann.title}</h3>
+                                <div className="flex items-center gap-1 mt-1 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                    <BookOpen size={12} />
+                                    {ann.courseName}
+                                </div>
                                 <p className="text-sm text-gray-500 mt-1 truncate">{ann.content}</p>
                             </div>
                         ))}
@@ -134,12 +138,18 @@ const Dashboard = () => {
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 animate-in fade-in zoom-in duration-200">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${selectedAnnouncement.type === 'academic'
-                                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
-                                    : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                                    }`}>
-                                    {selectedAnnouncement.type}
-                                </span>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${selectedAnnouncement.type === 'academic'
+                                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+                                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                        }`}>
+                                        {selectedAnnouncement.type}
+                                    </span>
+                                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded flex items-center gap-1">
+                                        <BookOpen size={12} />
+                                        {selectedAnnouncement.courseName}
+                                    </span>
+                                </div>
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-2">
                                     {selectedAnnouncement.title}
                                 </h2>

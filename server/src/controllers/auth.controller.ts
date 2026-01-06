@@ -54,17 +54,14 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
     try {
         const { userId, password } = req.body;
-        console.log(`[LOGIN ATTEMPT] UserID: "${userId}"`);
 
         const user = await prisma.user.findUnique({ where: { username: userId } });
-        console.log(`[LOGIN] User found: ${!!user}`);
 
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        console.log(`[LOGIN] Password match: ${isMatch}`);
 
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
@@ -75,7 +72,6 @@ export const login = async (req: Request, res: Response) => {
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '15m' } // Shorter access token
         );
-        console.log(`[LOGIN] Access Token generated`);
 
         // Generate Refresh Token
         const refreshToken = jwt.sign(
@@ -95,7 +91,6 @@ export const login = async (req: Request, res: Response) => {
                 expiresAt
             }
         });
-        console.log(`[LOGIN] Refresh Token stored`);
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -113,10 +108,8 @@ export const login = async (req: Request, res: Response) => {
             path: '/'
         });
 
-        console.log(`[LOGIN] Success: ${user.email}. Sending response...`);
-
         // Log Audit
-        await logAudit(user.id, 'LOGIN', 'AUTH', { method: 'email' }, req.ip);
+        await logAudit(user.id, 'LOGIN', 'AUTH', { method: 'username' }, req.ip);
 
         res.json({
             message: 'Login successful',

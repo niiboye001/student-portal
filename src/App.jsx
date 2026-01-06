@@ -6,10 +6,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
+import StudentCourseDetails from './pages/StudentCourseDetails';
+import CourseRegistration from './pages/CourseRegistration';
+import StudentFinance from './pages/StudentFinance';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import Assignments from './pages/Assignments';
 import Login from './pages/Login';
+import StudentAnnouncements from './pages/student/StudentAnnouncements';
 
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -20,6 +24,7 @@ import CourseManagement from './pages/admin/CourseManagement';
 import StaffManagement from './pages/admin/StaffManagement';
 import Analytics from './pages/admin/Analytics';
 import AuditLogs from './pages/admin/AuditLogs';
+import AcademicManagement from './pages/admin/AcademicManagement';
 import Announcements from './pages/admin/Announcements';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import MyCourses from './pages/staff/MyCourses';
@@ -43,9 +48,12 @@ function App() {
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="courses" element={<Courses />} />
+                <Route path="courses/:id" element={<StudentCourseDetails />} />
                 <Route path="assignments" element={<Assignments />} />
-
+                <Route path="courses/register" element={<CourseRegistration />} />
+                <Route path="finance" element={<StudentFinance />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="announcements" element={<StudentAnnouncements />} />
               </Route>
             </Route>
 
@@ -65,6 +73,7 @@ function App() {
                 <Route path="staff" element={<StaffManagement />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="audit-logs" element={<AuditLogs />} />
+                <Route path="academic" element={<AcademicManagement />} /> {/* Added Academic route */}
                 <Route path="announcements" element={<Announcements />} />
               </Route>
             </Route>

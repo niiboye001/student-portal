@@ -7,13 +7,56 @@ const StudentModal = ({ isOpen, onClose, onSuccess, student = null }) => {
     const [formData, setFormData] = useState({ name: '', email: '' });
     const [loading, setLoading] = useState(false);
 
+    const [programs, setPrograms] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [programsRes, deptsRes] = await Promise.all([
+                    api.get('/academic/programs'),
+                    api.get('/academic/departments')
+                ]);
+                setPrograms(programsRes.data);
+                setDepartments(deptsRes.data);
+            } catch (error) {
+                console.error('Failed to fetch academic data', error);
+            }
+        };
+        fetchData();
+    }, []);
+
     useEffect(() => {
         if (student) {
-            setFormData({ name: student.name, email: student.email });
+            const pId = student.programId || student.program?.id || '';
+            setFormData({
+                name: student.name,
+                email: student.email,
+                programId: pId
+            });
+
+            // Pre-select department if program exists
+            if (pId && programs.length > 0) {
+                const prog = programs.find(p => p.id === pId);
+                if (prog) {
+                    setSelectedDepartmentId(prog.departmentId);
+                }
+            }
         } else {
-            setFormData({ name: '', email: '' });
+            setFormData({ name: '', email: '', programId: '' });
+            setSelectedDepartmentId('');
         }
-    }, [student, isOpen]);
+    }, [student, isOpen, programs]);
+
+    const filteredPrograms = selectedDepartmentId
+        ? programs.filter(p => p.departmentId === selectedDepartmentId)
+        : [];
+
+    const handleDepartmentChange = (e) => {
+        setSelectedDepartmentId(e.target.value);
+        setFormData({ ...formData, programId: '' }); // Reset program when dept changes
+    };
 
     if (!isOpen) return null;
 
@@ -87,6 +130,42 @@ const StudentModal = ({ isOpen, onClose, onSuccess, student = null }) => {
                         </div>
                         {!isEdit && (
                             <p className="text-xs text-gray-500 ml-1">Default password will be set to: <span className="font-mono bg-gray-100 px-1 rounded">Student123!</span></p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Department</label>
+                        <select
+                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
+                            value={selectedDepartmentId}
+                            onChange={handleDepartmentChange}
+                        >
+                            <option value="">Select a Department</option>
+                            {departments.map(dept => (
+                                <option key={dept.id} value={dept.id}>
+                                    {dept.name} ({dept.code})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Academic Program</label>
+                        <select
+                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white"
+                            value={formData.programId}
+                            onChange={(e) => setFormData({ ...formData, programId: e.target.value })}
+                            disabled={!selectedDepartmentId}
+                        >
+                            <option value="">Select a Program</option>
+                            {filteredPrograms.map(prog => (
+                                <option key={prog.id} value={prog.id}>
+                                    {prog.name} ({prog.code})
+                                </option>
+                            ))}
+                        </select>
+                        {!selectedDepartmentId && (
+                            <p className="text-xs text-orange-500 ml-1">Please select a department first.</p>
                         )}
                     </div>
 

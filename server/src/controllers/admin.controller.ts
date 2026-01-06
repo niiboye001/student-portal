@@ -38,7 +38,7 @@ export const resetUserPassword = async (req: Request, res: Response) => {
 
 export const createStudent = async (req: Request, res: Response) => {
     try {
-        const { name, email } = req.body;
+        const { name, email, programId } = req.body;
 
         if (!name || !email) {
             return res.status(400).json({ message: 'Name and email are required' });
@@ -60,6 +60,8 @@ export const createStudent = async (req: Request, res: Response) => {
                 username,
                 password: hashedPassword,
                 role: 'STUDENT',
+                // @ts-ignore
+                programId: programId || null,
                 profile: {
                     create: {} // Create empty profile
                 }
@@ -70,6 +72,8 @@ export const createStudent = async (req: Request, res: Response) => {
                 email: true,
                 username: true,
                 role: true,
+                // @ts-ignore
+                program: { select: { name: true } },
                 createdAt: true
             }
         });
@@ -180,7 +184,7 @@ export const deleteStudent = async (req: Request, res: Response) => {
 export const updateStudent = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { name, email } = req.body;
+        const { name, email, programId } = req.body;
 
         if (email) {
             const existing = await prisma.user.findUnique({ where: { email } });
@@ -191,7 +195,10 @@ export const updateStudent = async (req: Request, res: Response) => {
 
         const student = await prisma.user.update({
             where: { id },
-            data: { name, email }
+            // @ts-ignore
+            data: { name, email, programId },
+            // @ts-ignore
+            include: { program: true }
         });
 
         res.json(student);
@@ -209,6 +216,8 @@ export const getAllStudents = async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 email: true,
+                // @ts-ignore
+                program: { select: { id: true, name: true, department: { select: { name: true } } } },
                 createdAt: true
             }
         });
@@ -227,6 +236,10 @@ export const getAllCourses = async (req: Request, res: Response) => {
                 },
                 instructor: {
                     select: { id: true, name: true, email: true }
+                },
+                // @ts-ignore
+                programs: {
+                    select: { id: true, name: true, code: true }
                 }
             }
         });
@@ -257,7 +270,11 @@ export const createCourse = async (req: Request, res: Response) => {
                 instructorId: instructorId || null,
                 level: level || 100,
                 semester: semester || 1,
-                credits: credits || 3
+                credits: credits || 3,
+                // @ts-ignore
+                programs: {
+                    connect: req.body.programIds?.map((id: string) => ({ id })) || []
+                }
             }
         });
 
@@ -287,7 +304,13 @@ export const updateCourse = async (req: Request, res: Response) => {
 
         const course = await prisma.course.update({
             where: { id },
-            data: { name, code, description, credits, instructorId, level, semester }
+            data: {
+                name, code, description, credits, instructorId, level, semester,
+                // @ts-ignore
+                programs: {
+                    set: req.body.programIds?.map((id: string) => ({ id })) || []
+                }
+            }
         });
 
         res.json(course);

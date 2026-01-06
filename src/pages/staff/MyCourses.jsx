@@ -32,10 +32,10 @@ const MyCourses = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {courses.map(course => (
                         <div key={course.id} className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <h3 className="font-bold text-lg mb-2">{course.name}</h3>
+                            <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">{course.name}</h3>
                             <p className="text-blue-600 dark:text-blue-400 text-sm font-medium mb-4">{course.code}</p>
                             <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                     <Users size={16} />
                                     {course._count?.enrollments || 0} Students
                                 </span>

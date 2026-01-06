@@ -7,6 +7,10 @@ import authRoutes from './routes/auth.routes';
 import studentRoutes from './routes/student.routes';
 import adminRoutes from './routes/admin.routes';
 import staffRoutes from './routes/staff.routes';
+import academicRoutes from './routes/academic.routes';
+import financeRoutes from './routes/finance.routes';
+import announcementRoutes from './routes/announcement.routes';
+import scheduleRoutes from './routes/schedule.routes';
 import { rateLimit } from 'express-rate-limit';
 
 const app = express();
@@ -20,12 +24,6 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Debug logging BEFORE anything else
-app.use((req, res, next) => {
-    console.log(`[REQUEST] ${req.method} ${req.path}`);
-    if (req.method === 'POST') console.log('[BODY]', JSON.stringify(req.body));
-    next();
-});
 
 // Middleware
 app.use(helmet());
@@ -42,6 +40,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/academic', academicRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/schedule', scheduleRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

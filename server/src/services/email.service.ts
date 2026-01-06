@@ -20,15 +20,12 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
             return;
         }
 
-        console.log(`Attempting to send email from ${process.env.EMAIL_USER} to ${to}...`);
-
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to,
             subject,
             html
         });
-        console.log(`Email sent successfully to ${to}`);
     } catch (error: any) {
         console.error('Error sending email:', error.message);
         if (error.response) {

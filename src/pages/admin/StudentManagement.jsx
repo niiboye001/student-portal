@@ -189,17 +189,17 @@ const StudentManagement = () => {
                         </button>
 
                         {showFilterMenu && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-10 py-1">
+                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-10 py-1">
                                 <div className="p-2 border-b border-gray-100">
                                     <p className="text-xs font-semibold text-gray-500 px-2 mb-1">FILTER</p>
                                     <button
                                         onClick={() => { setFilter('all'); setShowFilterMenu(false); }}
-                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${filter === 'all' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${filter === 'all' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                                         All Students
                                     </button>
                                     <button
                                         onClick={() => { setFilter('recent'); setShowFilterMenu(false); }}
-                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${filter === 'recent' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${filter === 'recent' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                                         Recent (7 Days)
                                     </button>
                                 </div>
@@ -207,17 +207,17 @@ const StudentManagement = () => {
                                     <p className="text-xs font-semibold text-gray-500 px-2 mb-1">SORT BY</p>
                                     <button
                                         onClick={() => { setSort('newest'); setShowFilterMenu(false); }}
-                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${sort === 'newest' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${sort === 'newest' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                                         Newest First
                                     </button>
                                     <button
                                         onClick={() => { setSort('oldest'); setShowFilterMenu(false); }}
-                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${sort === 'oldest' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${sort === 'oldest' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                                         Oldest First
                                     </button>
                                     <button
                                         onClick={() => { setSort('name'); setShowFilterMenu(false); }}
-                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${sort === 'name' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        className={`w-full text-left px-2 py-1.5 text-sm rounded-lg ${sort === 'name' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                                         Name (A-Z)
                                     </button>
                                 </div>
@@ -232,6 +232,7 @@ const StudentManagement = () => {
                             <tr>
                                 <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Student</th>
                                 <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Email</th>
+                                <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Program</th>
                                 <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Registered on</th>
                                 <th className="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300 border-b dark:border-gray-700">Actions</th>
                             </tr>
@@ -252,6 +253,18 @@ const StudentManagement = () => {
                                             <div className="flex items-center gap-2">
                                                 <Mail size={14} />
                                                 {student.email}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`text-sm px-2 py-1 rounded-full w-fit ${student.program ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-gray-100 text-gray-500'}`}>
+                                                    {student.program?.name || 'Unassigned'}
+                                                </span>
+                                                {student.program?.department && (
+                                                    <span className="text-xs text-gray-500 ml-1">
+                                                        {student.program.department.name}
+                                                    </span>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-gray-600 dark:text-gray-300">

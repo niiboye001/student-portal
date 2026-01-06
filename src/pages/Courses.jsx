@@ -4,14 +4,13 @@ import { Search, Filter, Download, MoreVertical, BookOpen, ChevronRight, X } fro
 import { useAuth } from '../contexts/AuthContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import CourseDetails from '../components/CourseDetails';
+import { useNavigate } from 'react-router-dom';
 
 const Courses = () => {
     const { user: profile } = useAuth();
+    const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedCourseId, setSelectedCourseId] = useState(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     useEffect(() => {
         const fetchCourses = async () => {
@@ -28,7 +27,6 @@ const Courses = () => {
     }, []);
 
     const handleDownloadTranscript = () => {
-        console.log('Generating transcript for:', profile);
         try {
             const doc = new jsPDF();
 
@@ -113,7 +111,7 @@ const Courses = () => {
             doc.text('This is an electronically generated official transcript.', 105, finalY, { align: 'center' });
 
             // Download PDF
-            console.log('Saving PDF for:', studentName);
+            // Download PDF
             doc.save(`${studentName.replace(/\s+/g, '_')}_Transcript.pdf`);
         } catch (error) {
             console.error('Failed to generate PDF:', error);
@@ -130,8 +128,7 @@ const Courses = () => {
     };
 
     const handleViewDetails = (courseId) => {
-        setSelectedCourseId(courseId);
-        setIsDrawerOpen(true);
+        navigate(`/courses/${courseId}`);
     };
 
     if (loading) return (
@@ -263,26 +260,6 @@ const Courses = () => {
                 ))}
             </div>
 
-            {/* Side Drawer Overlay */}
-            {isDrawerOpen && (
-                <div
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity"
-                    onClick={() => setIsDrawerOpen(false)}
-                />
-            )}
-
-            {/* Side Drawer */}
-            <div
-                className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-800 z-[60] shadow-2xl transition-transform duration-300 transform ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
-                    }`}
-            >
-                {selectedCourseId && (
-                    <CourseDetails
-                        courseId={selectedCourseId}
-                        onClose={() => setIsDrawerOpen(false)}
-                    />
-                )}
-            </div>
         </div>
     );
 };

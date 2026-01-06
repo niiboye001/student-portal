@@ -75,10 +75,38 @@ export const getStaffStats = async (req: Request, res: Response) => {
             }
         });
 
+        // 4. Fetch announcements (System-wide + Course specific for this instructor)
+        const announcements = await prisma.announcement.findMany({
+            where: {
+                OR: [
+                    { targetRole: null },
+                    { targetRole: 'STAFF' },
+                    {
+                        course: {
+                            instructorId: userId
+                        }
+                    }
+                ]
+            },
+            take: 5,
+            include: { course: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const mappedAnnouncements = announcements.map(a => ({
+            id: a.id,
+            title: a.title,
+            content: a.content,
+            date: a.createdAt.toISOString().split('T')[0],
+            type: a.type,
+            courseName: a.course?.name || 'System Announcement'
+        }));
+
         res.json({
             courses: courseCount,
             students: students.length,
-            upcomingClasses: upcomingClasses
+            upcomingClasses: upcomingClasses,
+            announcements: mappedAnnouncements
         });
 
     } catch (error) {
@@ -124,6 +152,13 @@ export const getCourseDetails = async (req: Request, res: Response) => {
                     orderBy: {
                         dueDate: 'asc'
                     }
+                },
+                modules: {
+                    include: { items: { orderBy: { order: 'asc' } } },
+                    orderBy: { order: 'asc' }
+                },
+                announcements: {
+                    orderBy: { createdAt: 'desc' }
                 },
                 _count: {
                     select: { enrollments: true, assignments: true }
@@ -267,7 +302,7 @@ export const createAssignment = async (req: Request, res: Response) => {
     try {
         const userId = (req as AuthRequest).user?.userId;
         const { id } = req.params; // courseId
-        const { title, description, dueDate, status } = req.body;
+        const { title, description, dueDate, status, fileUrl } = req.body;
 
         if (!userId) {
             return res.status(401).json({ message: 'Unauthorized' });
@@ -287,7 +322,8 @@ export const createAssignment = async (req: Request, res: Response) => {
                 title,
                 description,
                 dueDate: new Date(dueDate),
-                status: status || 'PENDING'
+                status: status || 'PENDING',
+                fileUrl
             }
         });
 
@@ -478,5 +514,137 @@ export const gradeSubmission = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Grade submission error:', error);
         res.status(500).json({ message: 'Error grading submission' });
+    }
+};
+
+// --- Module Management ---
+
+export const createModule = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { courseId, title, description, order } = req.body;
+
+        if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+        // Verify ownership
+        const course = await prisma.course.findFirst({
+            where: { id: courseId, instructorId: userId }
+        });
+
+        if (!course) return res.status(403).json({ message: 'Not authorized' });
+
+        const module = await prisma.module.create({
+            data: {
+                title,
+                description,
+                order: order || 0,
+                courseId
+            },
+            include: { items: true }
+        });
+
+        res.status(201).json(module);
+    } catch (error) {
+        console.error('Create module error:', error);
+        res.status(500).json({ message: 'Error creating module' });
+    }
+};
+
+export const updateModule = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id } = req.params;
+        const { title, description, order } = req.body;
+
+        const module = await prisma.module.findUnique({
+            where: { id },
+            include: { course: true }
+        });
+
+        if (!module || module.course.instructorId !== userId) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const updated = await prisma.module.update({
+            where: { id },
+            data: { title, description, order },
+            include: { items: true }
+        });
+
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating module' });
+    }
+};
+
+export const deleteModule = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id } = req.params;
+
+        const module = await prisma.module.findUnique({
+            where: { id },
+            include: { course: true }
+        });
+
+        if (!module || module.course.instructorId !== userId) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await prisma.module.delete({ where: { id } });
+        res.json({ message: 'Module deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting module' });
+    }
+};
+
+export const createModuleItem = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { moduleId, title, type, content, order } = req.body;
+
+        const module = await prisma.module.findUnique({
+            where: { id: moduleId },
+            include: { course: true }
+        });
+
+        if (!module || module.course.instructorId !== userId) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const item = await prisma.moduleItem.create({
+            data: {
+                title,
+                type,
+                content,
+                order: order || 0,
+                moduleId
+            }
+        });
+
+        res.status(201).json(item);
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating item' });
+    }
+};
+
+export const deleteModuleItem = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id } = req.params;
+
+        const item = await prisma.moduleItem.findUnique({
+            where: { id },
+            include: { module: { include: { course: true } } }
+        });
+
+        if (!item || item.module.course.instructorId !== userId) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await prisma.moduleItem.delete({ where: { id } });
+        res.json({ message: 'Item deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting item' });
     }
 };

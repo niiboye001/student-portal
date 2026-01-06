@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { Megaphone, Plus, Trash2, Calendar, Users, AlertCircle, Check } from 'lucide-react';
+import { Megaphone, Plus, Trash2, Calendar, Users, AlertCircle, Check, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../../components/ConfirmationModal';
 
 const Announcements = () => {
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('active'); // 'active' | 'archived'
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -21,7 +22,7 @@ const Announcements = () => {
 
     const fetchAnnouncements = async () => {
         try {
-            const { data } = await api.get('/admin/announcements');
+            const { data } = await api.get(`/announcements?status=${filter}`);
             setAnnouncements(data);
         } catch (error) {
             console.error('Failed to fetch announcements', error);
@@ -33,7 +34,7 @@ const Announcements = () => {
 
     useEffect(() => {
         fetchAnnouncements();
-    }, []);
+    }, [filter]);
 
     const handleDelete = (announcement) => {
         setAnnouncementToDelete(announcement);
@@ -43,7 +44,7 @@ const Announcements = () => {
     const confirmDelete = async () => {
         if (!announcementToDelete) return;
         try {
-            await api.delete(`/admin/announcements/${announcementToDelete.id}`);
+            await api.delete(`/announcements/${announcementToDelete.id}`);
             toast.success('Announcement deleted');
             fetchAnnouncements();
             setDeleteModalOpen(false);
@@ -59,7 +60,7 @@ const Announcements = () => {
                 ? new Date(`${formData.expiryDate}T${formData.expiryTime}`)
                 : formData.expiryDate ? new Date(formData.expiryDate) : null;
 
-            await api.post('/admin/announcements', {
+            await api.post('/announcements', {
                 title: formData.title,
                 content: formData.content,
                 targetRole: formData.targetRole || null,
@@ -103,9 +104,35 @@ const Announcements = () => {
                 </button>
             </div>
 
+            {/* Filter Tabs */}
+            <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+                <button
+                    onClick={() => setFilter('active')}
+                    className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${filter === 'active'
+                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                >
+                    Active
+                </button>
+                <button
+                    onClick={() => setFilter('archived')}
+                    className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${filter === 'archived'
+                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                >
+                    History
+                </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {announcements.map((announcement) => (
-                    <div key={announcement.id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative group">
+                {announcements.length === 0 ? (
+                    <div className="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">
+                        {filter === 'active' ? 'No active announcements' : 'No archived announcements'}
+                    </div>
+                ) : (announcements.map((announcement) => (
+                    <div key={announcement.id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative group flex flex-col">
                         <div className="flex justify-between items-start mb-4">
                             <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${getTypeColor(announcement.type)}`}>
                                 {announcement.type}
@@ -119,7 +146,7 @@ const Announcements = () => {
                         </div>
 
                         <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{announcement.title}</h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 flex-grow">
                             {announcement.content}
                         </p>
 
@@ -132,9 +159,15 @@ const Announcements = () => {
                                 <Calendar size={12} />
                                 {new Date(announcement.createdAt).toLocaleDateString()}
                             </div>
+                            {announcement.expiresAt && (
+                                <div className={`flex items-center gap-1 ${new Date(announcement.expiresAt) < new Date() ? 'text-red-500' : 'text-green-500'}`}>
+                                    <Clock size={12} />
+                                    Expires: {new Date(announcement.expiresAt).toLocaleDateString()}
+                                </div>
+                            )}
                         </div>
                     </div>
-                ))}
+                )))}
             </div>
 
             {/* Create Modal */}

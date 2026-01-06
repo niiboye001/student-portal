@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma';
+import { logAudit } from '../services/audit.service';
 import { updateEnrollmentStats } from '../utils/enrollment-stats';
 
 interface AuthRequest extends Request {
@@ -141,23 +142,43 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             }));
 
         // Get real announcements
+        // Get real announcements
         const now = new Date();
+        const enrolledCourseIds = user?.enrollments.map(e => e.courseId) || [];
+
         const rawAnnouncements = await prisma.announcement.findMany({
             where: {
-                OR: [
-                    { targetRole: null },
-                    { targetRole: 'STUDENT' }
-                ],
                 AND: [
                     {
                         OR: [
                             { expiresAt: null },
                             { expiresAt: { gt: now } }
                         ]
+                    },
+                    {
+                        OR: [
+                            // 1. System Announcements (No Course)
+                            {
+                                courseId: null,
+                                OR: [
+                                    { targetRole: null },
+                                    { targetRole: 'STUDENT' }
+                                ]
+                            },
+                            // 2. Course Announcements (Enrolled Courses)
+                            {
+                                courseId: { in: enrolledCourseIds },
+                                OR: [
+                                    { targetRole: null },
+                                    { targetRole: 'STUDENT' }
+                                ]
+                            }
+                        ]
                     }
                 ]
             },
             take: 5,
+            include: { course: true },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -166,7 +187,8 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
             title: a.title,
             content: a.content,
             date: a.createdAt.toISOString().split('T')[0], // YYYY-MM-DD
-            type: a.type
+            type: a.type,
+            courseName: a.course?.name || 'System Announcement'
         }));
 
         res.json({
@@ -232,6 +254,13 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
                                 }
                             },
                             orderBy: { dueDate: 'asc' }
+                        },
+                        modules: {
+                            include: { items: { orderBy: { order: 'asc' } } },
+                            orderBy: { order: 'asc' }
+                        },
+                        announcements: {
+                            orderBy: { createdAt: 'desc' }
                         }
                     }
                 }
@@ -246,40 +275,6 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
             ...enrollment.course,
             grade: enrollment.grade,
             progress: enrollment.progress,
-            // Keep syllabus as mock for now as it's not in schema
-            syllabus: [
-                "Module 1: Introduction and Core Concepts",
-                "Module 2: Intermediate Techniques",
-                "Module 3: Advanced Applications",
-                "Module 4: Final Project and Review"
-            ],
-            upcomingAssignments: enrollment.course.assignments.map(a => {
-                const submission = a.submissions[0];
-                let status = a.status;
-                const now = new Date();
-                const due = new Date(a.dueDate);
-
-                if (submission) {
-                    if (submission.grade) {
-                        status = 'GRADED';
-                    } else if (new Date(submission.submittedAt) > due) {
-                        status = 'LATE';
-                    } else {
-                        status = 'SUBMITTED';
-                    }
-                } else if (now > due) {
-                    status = 'MISSING';
-                }
-
-                return {
-                    id: a.id,
-                    title: a.title,
-                    description: a.description,
-                    dueDate: due.toLocaleDateString(),
-                    status: status,
-                    submission: submission || null
-                };
-            })
         };
 
         res.json(detailedCourse);
@@ -433,7 +428,8 @@ export const getAssignments = async (req: AuthRequest, res: Response) => {
                 course: a.course,
                 courseId: a.courseId,
                 grade: submission?.grade, // Include grade if available
-                submission: submission || null
+                submission: submission || null,
+                fileUrl: a.fileUrl // Return file URL
             };
         });
 
@@ -489,5 +485,104 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Profile updated successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error updating profile' });
+    }
+};
+
+// --- Course Registration ---
+
+export const getAvailableCourses = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+
+        // Verify user has a program
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            // @ts-ignore
+            select: { programId: true }
+        });
+
+        // @ts-ignore
+        if (!user?.programId) {
+            return res.status(403).json({ message: 'You must be assigned to an academic program to register.' });
+        }
+
+        // Get IDs of courses user is already enrolled in
+        const enrolled = await prisma.enrollment.findMany({
+            where: { userId },
+            select: { courseId: true }
+        });
+        const enrolledIds = enrolled.map(e => e.courseId);
+
+        // Fetch courses NOT in that list AND belonging to student's program
+        const availableCourses = await prisma.course.findMany({
+            where: {
+                id: { notIn: enrolledIds },
+                // @ts-ignore
+                programs: {
+                    some: { id: user.programId }
+                }
+            },
+            include: {
+                instructor: { select: { name: true } },
+                _count: { select: { enrollments: true } },
+                // @ts-ignore
+                department: true // Include department info
+            },
+            orderBy: { level: 'asc' }
+        });
+
+        res.json(availableCourses);
+    } catch (error: any) {
+        console.error('Get available courses error:', error);
+        res.status(500).json({ message: error.message || 'Error fetching available courses' });
+    }
+};
+
+export const enrollCourse = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const { courseId } = req.body;
+
+        if (!userId || !courseId) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        // Verify user has a program
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            // @ts-ignore
+            select: { programId: true }
+        });
+
+        if (!user?.programId) {
+            return res.status(403).json({ message: 'You must be assigned to an academic program to register.' });
+        }
+
+        const existing = await prisma.enrollment.findUnique({
+            where: {
+                userId_courseId: {
+                    userId,
+                    courseId
+                }
+            }
+        });
+
+        if (existing) {
+            return res.status(400).json({ message: 'Already enrolled in this course' });
+        }
+
+        await prisma.enrollment.create({
+            data: {
+                userId,
+                courseId
+            }
+        });
+
+        await logAudit(userId, 'ENROLL_COURSE', 'ENROLLMENT', { courseId }, req.ip);
+
+        res.json({ message: 'Enrollment successful' });
+    } catch (error) {
+        console.error('Enrollment error:', error);
+        res.status(500).json({ message: 'Error enrolling in course' });
     }
 };

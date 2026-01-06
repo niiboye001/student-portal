@@ -11,9 +11,11 @@ const Schedule = () => {
 
     useEffect(() => {
         const fetchSchedule = async () => {
+            if (!user) return;
+
             try {
-                const endpoint = user?.role === 'STUDENT' ? '/student/schedule' : '/staff/schedule';
-                const response = await api.get(endpoint);
+                // Use unified endpoint
+                const response = await api.get('/schedule');
                 setWeeklySchedule(response.data);
             } catch (error) {
                 console.error('Error fetching schedule', error);
@@ -21,8 +23,9 @@ const Schedule = () => {
                 setLoading(false);
             }
         };
+
         fetchSchedule();
-    }, []);
+    }, [user]);
 
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 

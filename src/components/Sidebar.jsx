@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Calendar, User, LogOut, X, FileText, Briefcase, BarChart2, Moon, Sun, Shield, Megaphone } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Calendar, User, LogOut, X, FileText, Briefcase, BarChart2, Moon, Sun, Shield, Megaphone, Users, DollarSign } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import clsx from 'clsx';
@@ -18,8 +18,11 @@ const Sidebar = ({ isOpen, onClose }) => {
     const studentItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
         { icon: BookOpen, label: 'Courses', path: '/courses' },
+        { icon: BookOpen, label: 'Register', path: '/courses/register' },
+        { icon: DollarSign, label: 'Finance', path: '/finance' },
         { icon: FileText, label: 'Assignments', path: '/assignments' },
         { icon: Calendar, label: 'Schedule', path: '/schedule' },
+        { icon: Megaphone, label: 'Announcements', path: '/announcements' },
         { icon: User, label: 'Profile', path: '/profile' },
     ];
 
@@ -31,6 +34,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { icon: BarChart2, label: 'Analytics', path: '/admin/analytics' },
         { icon: FileText, label: 'Audit Logs', path: '/admin/audit-logs' },
         { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
+        { icon: BookOpen, label: 'Academic Structure', path: '/admin/academic' },
     ];
 
     const staffItems = [
@@ -57,9 +61,18 @@ const Sidebar = ({ isOpen, onClose }) => {
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">SP</div>
-                        <span className="text-xl font-bold text-gray-800 dark:text-white">Student Portal</span>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800">
+                            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">
+                                {user?.name || 'Guest User'}
+                            </span>
+                            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                {user?.role ? user.role.replace('_', ' ') : 'Student Portal'}
+                            </span>
+                        </div>
                     </div>
                     <button onClick={onClose} className="md:hidden text-gray-500 hover:text-gray-700">
                         <X size={24} />

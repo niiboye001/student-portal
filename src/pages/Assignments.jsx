@@ -3,6 +3,7 @@ import api from '../services/api';
 import { Calendar, CheckCircle2, Circle, Clock, FileText, Filter, X, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { jsPDF } from 'jspdf';
 
 const Assignments = () => {
     const [assignments, setAssignments] = useState([]);
@@ -47,6 +48,40 @@ const Assignments = () => {
     const [selectedAssignment, setSelectedAssignment] = useState(null);
     const [submissionContent, setSubmissionContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    const handleDownloadAssignment = (assignment) => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(20);
+        doc.text("Assignment Details", 20, 20);
+
+        // Meta Info
+        doc.setFontSize(12);
+        doc.text(`Title: ${assignment.title}`, 20, 40);
+        doc.text(`Course: ${assignment.course?.name || 'N/A'}`, 20, 50);
+        doc.text(`Due Date: ${new Date(assignment.dueDate).toLocaleDateString()}`, 20, 60);
+        doc.text(`Status: ${assignment.status}`, 20, 70);
+
+        // Description
+        doc.setFontSize(14);
+        doc.text("Description:", 20, 90);
+        doc.setFontSize(12);
+
+        // Split text to fit page
+        const splitDescription = doc.splitTextToSize(assignment.description || 'No description provided.', 170);
+        doc.text(splitDescription, 20, 100);
+
+        // Attached File Link
+        if (assignment.fileUrl) {
+            const yPos = 100 + (splitDescription.length * 7) + 20;
+            doc.setTextColor(0, 0, 255);
+            doc.textWithLink('Click here to download attached resources', 20, yPos, { url: assignment.fileUrl });
+        }
+
+        doc.save(`${assignment.title.replace(/\s+/g, '_')}_Details.pdf`);
+        toast.success('Assignment PDF downloaded!');
+    };
 
     const handleOpenSubmission = (assignment) => {
         setSelectedAssignment(assignment);
@@ -151,18 +186,28 @@ const Assignments = () => {
                                         </div>
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => handleOpenSubmission(assignment)}
-                                    className={clsx(
-                                        "px-4 py-2 rounded-lg font-medium transition-colors",
-                                        assignment.status === 'PENDING' || assignment.status === 'MISSING' || assignment.status === 'LATE'
-                                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                                            : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
-                                    )}
-                                >
-                                    {assignment.status === 'PENDING' || assignment.status === 'MISSING' || assignment.status === 'LATE' ? 'Submit' :
-                                        assignment.status === 'GRADED' ? 'View Grade' : 'View Submission'}
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleDownloadAssignment(assignment)}
+                                        className="px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                                        title="Download Assignment Details PDF"
+                                    >
+                                        <FileText size={16} />
+                                        <span className="hidden sm:inline">Download PDF</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleOpenSubmission(assignment)}
+                                        className={clsx(
+                                            "px-4 py-2 rounded-lg font-medium transition-colors",
+                                            assignment.status === 'PENDING' || assignment.status === 'MISSING' || assignment.status === 'LATE'
+                                                ? "bg-blue-600 text-white hover:bg-blue-700"
+                                                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                                        )}
+                                    >
+                                        {assignment.status === 'PENDING' || assignment.status === 'MISSING' || assignment.status === 'LATE' ? 'Submit' :
+                                            assignment.status === 'GRADED' ? 'View Grade' : 'View Submission'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))
@@ -175,8 +220,8 @@ const Assignments = () => {
 
             {/* Submission Modal */}
             {submissionModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
                         <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50">
                             <div>
                                 <h3 className="font-bold text-lg text-gray-900 dark:text-white">Submit Assignment</h3>
@@ -192,29 +237,34 @@ const Assignments = () => {
                                 <textarea
                                     required
                                     rows="4"
-                                    placeholder="Paste your Google Doc link, GitHub repo, or type your answer here..."
-                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-shadow text-sm"
+                                    placeholder={selectedAssignment?.status === 'GRADED' ? "This assignment has been graded." : "Paste your Google Doc link, GitHub repo, or type your answer here..."}
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-shadow text-sm disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-500"
                                     value={submissionContent}
                                     onChange={(e) => setSubmissionContent(e.target.value)}
+                                    disabled={selectedAssignment?.status === 'GRADED'}
                                 />
-                                <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
-                                    <AlertCircle size={12} />
-                                    Links must be accessible publicly or to the instructor.
-                                </p>
+                                {selectedAssignment?.status !== 'GRADED' && (
+                                    <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={12} />
+                                        Links must be accessible publicly or to the instructor.
+                                    </p>
+                                )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={submitting || (selectedAssignment?.submission && selectedAssignment?.status !== 'PENDING' && selectedAssignment?.status !== 'MISSING' && selectedAssignment?.status !== 'LATE')} // Disable if already submitted/graded
-                                className={clsx(
-                                    "w-full py-2.5 font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2",
-                                    selectedAssignment?.submission
-                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
-                                        : "bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                )}
-                            >
-                                {submitting ? 'Submitting...' : selectedAssignment?.submission ? 'Already Submitted' : 'Submit Assignment'}
-                            </button>
+                            {selectedAssignment?.status !== 'GRADED' && (
+                                <button
+                                    type="submit"
+                                    disabled={submitting || (selectedAssignment?.submission && selectedAssignment?.status !== 'PENDING' && selectedAssignment?.status !== 'MISSING' && selectedAssignment?.status !== 'LATE')}
+                                    className={clsx(
+                                        "w-full py-2.5 font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2",
+                                        selectedAssignment?.submission
+                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
+                                            : "bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                    )}
+                                >
+                                    {submitting ? 'Submitting...' : selectedAssignment?.submission ? 'Already Submitted' : 'Submit Assignment'}
+                                </button>
+                            )}
 
                             {/* Show Grade/Feedback in Modal if exists */}
                             {selectedAssignment?.submission?.grade && (
