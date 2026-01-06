@@ -382,24 +382,29 @@ const StudentCourseDetails = () => {
                                 <textarea
                                     required
                                     rows="4"
-                                    placeholder="Paste your Google Doc link, GitHub repo, or type your answer here..."
-                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-shadow text-sm"
+                                    placeholder={selectedAssignment?.submissions?.[0]?.grade ? "This assignment has been graded." : "Paste your Google Doc link, GitHub repo, or type your answer here..."}
+                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-shadow text-sm disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-500"
                                     value={submissionContent}
                                     onChange={(e) => setSubmissionContent(e.target.value)}
+                                    disabled={!!selectedAssignment?.submissions?.[0]?.grade}
                                 />
-                                <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
-                                    <AlertCircle size={12} />
-                                    Links must be accessible publicly or to the instructor.
-                                </p>
+                                {!selectedAssignment?.submissions?.[0]?.grade && (
+                                    <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={12} />
+                                        Links must be accessible publicly or to the instructor.
+                                    </p>
+                                )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                            >
-                                {submitting ? 'Submitting...' : 'Submit Assignment'}
-                            </button>
+                            {!selectedAssignment?.submissions?.[0]?.grade && (
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                >
+                                    {submitting ? 'Submitting...' : 'Submit Assignment'}
+                                </button>
+                            )}
                         </form>
                     </div>
                 </div>
