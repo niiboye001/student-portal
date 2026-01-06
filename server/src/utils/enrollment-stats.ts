@@ -80,7 +80,7 @@ export const updateEnrollmentStats = async (userId: string, courseId: string) =>
             }
         });
 
-        console.log(`Updated stats for user ${userId} in course ${courseId}: Progress=${progress}%, Grade=${newGrade}`);
+        // console.log(`Updated stats for user ${userId} in course ${courseId}: Progress=${progress}%, Grade=${newGrade}`);
 
     } catch (error) {
         console.error('Error updating enrollment stats:', error);

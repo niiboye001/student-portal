@@ -110,31 +110,76 @@ export const getAdminStats = async (req: Request, res: Response) => {
             }
         });
 
-        // 6 Month Trend
+        // Registration Trend Logic
+        const { year, month } = req.query;
         const registrationTrend = [];
-        for (let i = 5; i >= 0; i--) {
-            const startOfMonth = new Date();
-            startOfMonth.setMonth(startOfMonth.getMonth() - i);
-            startOfMonth.setDate(1);
-            startOfMonth.setHours(0, 0, 0, 0);
 
-            const endOfMonth = new Date(startOfMonth);
-            endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+        if (year && month) {
+            // Daily trend for specific month
+            const targetYear = parseInt(year as string);
+            const targetMonth = parseInt(month as string) - 1; // 0-indexed in JS Date
+            const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
 
-            const count = await prisma.user.count({
-                where: {
-                    role: 'STUDENT',
-                    createdAt: {
-                        gte: startOfMonth,
-                        lt: endOfMonth
+            for (let d = 1; d <= daysInMonth; d++) {
+                const startOfDay = new Date(targetYear, targetMonth, d);
+                startOfDay.setHours(0, 0, 0, 0);
+                const endOfDay = new Date(targetYear, targetMonth, d + 1);
+
+                const count = await prisma.user.count({
+                    where: {
+                        role: 'STUDENT',
+                        createdAt: { gte: startOfDay, lt: endOfDay }
                     }
-                }
-            });
+                });
 
-            registrationTrend.push({
-                month: startOfMonth.toLocaleString('default', { month: 'short' }),
-                count: count
-            });
+                registrationTrend.push({
+                    day: d,
+                    date: startOfDay.toLocaleDateString(),
+                    count
+                });
+            }
+        } else if (year) {
+            // Monthly trend for specific year
+            const targetYear = parseInt(year as string);
+            for (let m = 0; m < 12; m++) {
+                const startOfMonth = new Date(targetYear, m, 1);
+                const endOfMonth = new Date(targetYear, m + 1, 1);
+
+                const count = await prisma.user.count({
+                    where: {
+                        role: 'STUDENT',
+                        createdAt: { gte: startOfMonth, lt: endOfMonth }
+                    }
+                });
+
+                registrationTrend.push({
+                    month: startOfMonth.toLocaleString('default', { month: 'short' }),
+                    count
+                });
+            }
+        } else {
+            // Default: Last 6 months
+            for (let i = 5; i >= 0; i--) {
+                const startOfMonth = new Date();
+                startOfMonth.setMonth(startOfMonth.getMonth() - i);
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+
+                const endOfMonth = new Date(startOfMonth);
+                endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+                const count = await prisma.user.count({
+                    where: {
+                        role: 'STUDENT',
+                        createdAt: { gte: startOfMonth, lt: endOfMonth }
+                    }
+                });
+
+                registrationTrend.push({
+                    month: startOfMonth.toLocaleString('default', { month: 'short' }),
+                    count
+                });
+            }
         }
 
         // Average Class Size
