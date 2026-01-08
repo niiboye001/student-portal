@@ -145,10 +145,7 @@ const Login = () => {
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                             Forgot your password? <Link to="/forgot-password" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Reset here</Link>
                         </p>
-                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-xs text-center text-gray-400 dark:text-gray-500 space-y-1">
-                            <div>Admin: admin@university.edu / password123</div>
-                            <div>Student: sharp.brain@gmail.com / password123</div>
-                        </div>
+
                     </div>
                 </div>
 
