@@ -79,7 +79,7 @@ const StudentFinance = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Outstanding Balance Card */}
-                <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-lg">
+                <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-lg h-fit">
                     <p className="text-blue-100 mb-1">Total Outstanding Balance</p>
                     <h2 className="text-4xl font-bold mb-4">${totalDue.toFixed(2)}</h2>
                     <div className="flex items-center gap-2 text-sm text-blue-200">

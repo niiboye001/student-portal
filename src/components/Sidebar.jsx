@@ -35,6 +35,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { icon: FileText, label: 'Audit Logs', path: '/admin/audit-logs' },
         { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
         { icon: BookOpen, label: 'Academic Structure', path: '/admin/academic' },
+        { icon: DollarSign, label: 'Finance', path: '/admin/finance' },
     ];
 
     const staffItems = [

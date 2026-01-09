@@ -57,6 +57,28 @@ export const getFees = async (req: Request, res: Response) => {
     }
 };
 
+// --- Admin: View All Invoices ---
+
+export const getAllInvoices = async (req: Request, res: Response) => {
+    try {
+        // @ts-ignore
+        const invoices = await prisma.invoice.findMany({
+            include: {
+                // @ts-ignore
+                student: {
+                    select: { id: true, name: true, email: true }
+                },
+                fee: true
+            },
+            orderBy: { dueDate: 'asc' }
+        });
+        res.json(invoices);
+    } catch (error) {
+        console.error('Get all invoices error:', error);
+        res.status(500).json({ message: 'Error fetching invoices' });
+    }
+};
+
 // --- Admin: Assign Fee (Create Invoice) ---
 
 export const createInvoice = async (req: Request, res: Response) => {
@@ -94,6 +116,7 @@ export const createInvoice = async (req: Request, res: Response) => {
 export const getStudentInvoices = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
+
         // @ts-ignore
         const invoices = await prisma.invoice.findMany({
             where: { studentId: userId },

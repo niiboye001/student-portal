@@ -26,6 +26,7 @@ import Analytics from './pages/admin/Analytics';
 import AuditLogs from './pages/admin/AuditLogs';
 import AcademicManagement from './pages/admin/AcademicManagement';
 import Announcements from './pages/admin/Announcements';
+import FinanceManagement from './pages/admin/FinanceManagement';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import MyCourses from './pages/staff/MyCourses';
 import StaffCourseDetails from './pages/staff/StaffCourseDetails';
@@ -75,6 +76,7 @@ function App() {
                 <Route path="audit-logs" element={<AuditLogs />} />
                 <Route path="academic" element={<AcademicManagement />} /> {/* Added Academic route */}
                 <Route path="announcements" element={<Announcements />} />
+                <Route path="finance" element={<FinanceManagement />} />
               </Route>
             </Route>
 
