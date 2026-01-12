@@ -279,7 +279,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
         });
 
         // Mock sending email
-        // console.log(`[EMAIL MOCK] Password Reset Link for ${email}: http://localhost:5173/reset-password?token=${safeToken}`);
+        // Send password reset link log
 
         res.json({ message: 'If an account exists, a reset email has been sent.' });
     } catch (error) {

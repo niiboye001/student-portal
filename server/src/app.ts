@@ -1,6 +1,7 @@
 import './config/env'; // Must be strictly first to avoid hoisting issues
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
@@ -46,6 +47,9 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/courses', courseRoutes);
+
+// Serve uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health Check
 app.get('/health', (req, res) => {

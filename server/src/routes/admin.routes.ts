@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getAdminStats, getAllStudents, getAllCourses, createStudent, deleteStudent, updateStudent, createCourse, updateCourse, deleteCourse, enrollStudent, getCourseEnrollments, deleteEnrollment, createStaff, getAllStaff, updateStaff, deleteStaff, resetUserPassword } from '../controllers/admin.controller';
 import { getAuditLogs, getAuditStats } from '../controllers/audit.controller';
 import { importStudents, importCourses, importStaff } from '../controllers/import.controller';
-import upload from '../middleware/upload.middleware';
+import { upload } from '../middleware/upload.middleware';
 import { authenticateToken, authorize } from '../middleware/auth.middleware';
 
 const router = Router();

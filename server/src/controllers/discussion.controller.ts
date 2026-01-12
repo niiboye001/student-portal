@@ -64,13 +64,34 @@ export const createPost = async (req: AuthRequest, res: Response) => {
         const { content, parentId } = req.body;
         const userId = req.user?.userId;
 
-        if (!content) {
-            return res.status(400).json({ message: 'Content is required' });
+        // Verify enrollment
+        const enrollment = await prisma.enrollment.findUnique({
+            where: {
+                userId_courseId: {
+                    userId: userId!,
+                    courseId
+                }
+            }
+        });
+
+        if (!enrollment && req.user?.role === 'STUDENT') {
+            return res.status(403).json({ message: 'Not enrolled in this course' });
+        }
+
+        if (!content && !req.file) {
+            return res.status(400).json({ message: 'Content or image is required' });
+        }
+
+        let attachmentUrl = null;
+        if (req.file) {
+            // Convert backslashes to forward slashes for URL
+            attachmentUrl = `/uploads/discussions/${req.file.filename}`;
         }
 
         const post = await prisma.discussion.create({
             data: {
-                content,
+                content: content || '',
+                attachmentUrl,
                 courseId,
                 userId: userId!,
                 parentId: parentId || null

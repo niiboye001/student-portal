@@ -1,25 +1,36 @@
+
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
-const storage = multer.memoryStorage();
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, '../../uploads/discussions');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-const upload = multer({
-    storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
     },
-    fileFilter: (req, file, cb) => {
-        // Accept CSV files
-        if (
-            file.mimetype === 'text/csv' ||
-            file.mimetype === 'application/vnd.ms-excel' ||
-            file.mimetype === 'application/csv' ||
-            file.originalname.endsWith('.csv')
-        ) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only CSV files are allowed'));
-        }
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
 
-export default upload;
+const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => { // Using explicit type for file if possible, or any. checking multer types
+    // Allow images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+        return cb(new Error('Only image files are allowed!'));
+    }
+    cb(null, true);
+};
+
+export const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});

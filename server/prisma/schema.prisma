@@ -248,6 +248,7 @@ model Payment {
 model Discussion {
   id        String   @id @default(uuid())
   content   String
+  attachmentUrl String?
   createdAt DateTime @default(now())
   
   userId    String

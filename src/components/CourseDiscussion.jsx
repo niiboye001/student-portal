@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
-import { MessageSquare, Send, User, Reply, Trash2, Clock } from 'lucide-react';
+import { MessageSquare, Send, User, Reply, Trash2, Clock, Image as ImageIcon, X } from 'lucide-react';
 
 const CourseDiscussion = ({ courseId }) => {
     const [discussions, setDiscussions] = useState([]);
     const [newPost, setNewPost] = useState("");
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [replyContent, setReplyContent] = useState({}); // Map of parentId -> content
     const [activeReplyId, setActiveReplyId] = useState(null); // Which post is being replied to
     const [loading, setLoading] = useState(true);
+    const fileInputRef = useRef(null);
 
     const fetchDiscussions = async () => {
         try {
@@ -25,15 +28,57 @@ const CourseDiscussion = ({ courseId }) => {
         // Optional: Polling or WebSocket could be added here
     }, [courseId]);
 
+    const handleImageSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handlePaste = (e) => {
+        if (e.clipboardData && e.clipboardData.items) {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    setSelectedImage(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setImagePreview(reader.result);
+                    };
+                    reader.readAsDataURL(file);
+                    e.preventDefault(); // Prevent default paste if it's an image
+                    break;
+                }
+            }
+        }
+    };
+
+    const removeImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
     const handlePostSubmit = async (e) => {
         e.preventDefault();
-        if (!newPost.trim()) return;
+        if (!newPost.trim() && !selectedImage) return;
 
         try {
-            await api.post(`/courses/${courseId}/discussions`, {
-                content: newPost
+            const formData = new FormData();
+            if (newPost.trim()) formData.append('content', newPost);
+            if (selectedImage) formData.append('image', selectedImage);
+
+            await api.post(`/courses/${courseId}/discussions`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             setNewPost("");
+            removeImage();
             fetchDiscussions(); // Refresh
         } catch (error) {
             console.error("Failed to post message", error);
@@ -73,17 +118,44 @@ const CourseDiscussion = ({ courseId }) => {
                     <MessageSquare size={20} className="text-blue-600" />
                     Class Discussion
                 </h3>
+                {imagePreview && (
+                    <div className="relative mb-3 inline-block">
+                        <img src={imagePreview} alt="Preview" className="h-32 w-auto rounded-lg border border-gray-200" />
+                        <button
+                            onClick={removeImage}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                )}
                 <form onSubmit={handlePostSubmit} className="flex gap-3">
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        title="Upload image"
+                    >
+                        <ImageIcon size={20} />
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageSelect}
+                        accept="image/*"
+                        className="hidden"
+                    />
                     <input
                         type="text"
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
+                        onPaste={handlePaste}
                         placeholder="Start a new topic..."
                         className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
                     />
                     <button
                         type="submit"
-                        disabled={!newPost.trim()}
+                        disabled={!newPost.trim() && !selectedImage}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Send size={18} />
@@ -121,9 +193,21 @@ const CourseDiscussion = ({ courseId }) => {
                             </div>
 
                             {/* Post Content */}
-                            <p className="text-gray-700 dark:text-gray-300 ml-13 mb-4 pl-13">
-                                {post.content}
-                            </p>
+                            <div className="ml-13 mb-4 pl-13">
+                                {post.attachmentUrl && (
+                                    <div className="mb-2">
+                                        <img
+                                            src={post.attachmentUrl}
+                                            alt="Attachment"
+                                            className="max-h-60 rounded-lg border border-gray-200 cursor-pointer hover:opacity-95"
+                                            onClick={() => window.open(post.attachmentUrl, '_blank')}
+                                        />
+                                    </div>
+                                )}
+                                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                    {post.content}
+                                </p>
+                            </div>
 
                             {/* Actions */}
                             <div className="flex items-center gap-4 ml-13">
