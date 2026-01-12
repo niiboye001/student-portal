@@ -5,19 +5,27 @@ import { z } from 'zod';
 import prisma from '../utils/prisma';
 import { logAudit } from '../services/audit.service';
 import { generateUserId } from '../utils/id.utils';
-
-interface AuthRequest extends Request {
-    user?: {
-        userId: string;
-        role: string;
-    };
-}
+import { AuthRequest } from '../middleware/auth.middleware';
 
 const registerSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
     name: z.string().min(2),
     role: z.enum(['STUDENT', 'ADMIN']).optional()
+});
+
+const loginSchema = z.object({
+    userId: z.string().min(1),
+    password: z.string().min(1)
+});
+
+const forgotPasswordSchema = z.object({
+    email: z.string().email()
+});
+
+const resetPasswordSchema = z.object({
+    token: z.string().min(1),
+    newPassword: z.string().min(6)
 });
 
 export const register = async (req: Request, res: Response) => {
@@ -53,7 +61,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const { userId, password } = req.body;
+        const { userId, password } = loginSchema.parse(req.body);
 
         const user = await prisma.user.findUnique({ where: { username: userId } });
 
@@ -245,7 +253,7 @@ export const me = async (req: AuthRequest, res: Response) => {
 // Forgot Password Flow
 export const forgotPassword = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
+        const { email } = forgotPasswordSchema.parse(req.body);
         const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user) {
@@ -282,7 +290,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
 export const resetPassword = async (req: Request, res: Response) => {
     try {
-        const { token, newPassword } = req.body;
+        const { token, newPassword } = resetPasswordSchema.parse(req.body);
 
         const user = await prisma.user.findFirst({
             where: {

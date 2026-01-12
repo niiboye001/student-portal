@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; // Import API service
-import { User, Mail, Lock, Save, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, Save, AlertCircle, FileText, Download } from 'lucide-react';
 import { z } from 'zod';
+import { generateTranscript } from '../utils/pdfGenerator';
 
 // Zod Schema
 const profileSchema = z.object({
@@ -76,6 +77,16 @@ const Profile = () => {
         } catch (error) {
             console.error("Update failed", error);
             setErrors({ submit: "Failed to update profile. Please check credentials." });
+        }
+    };
+
+    const handleDownloadTranscript = async () => {
+        try {
+            const { data } = await api.get('/student/transcript');
+            generateTranscript(data);
+        } catch (error) {
+            console.error("Failed to download transcript", error);
+            setErrors({ submit: "Failed to generate transcript. Please try again." });
         }
     };
 
@@ -177,6 +188,29 @@ const Profile = () => {
                                     <AlertCircle size={12} /> {errors.newPassword}
                                 </p>
                             )}
+                        </div>
+
+                        {/* Documents Section */}
+                        <div className="space-y-4 pt-4">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <FileText size={20} className="text-blue-600 dark:text-blue-400" />
+                                Documents
+                            </h2>
+
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg flex items-center justify-between border border-gray-100 dark:border-gray-600">
+                                <div>
+                                    <h3 className="font-medium text-gray-900 dark:text-white">Academic Transcript</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Download your official academic record</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadTranscript}
+                                    className="flex items-center gap-2 bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors shadow-sm"
+                                >
+                                    <Download size={16} />
+                                    Download PDF
+                                </button>
+                            </div>
                         </div>
                     </div>
 

@@ -3,13 +3,7 @@ import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma';
 import { logAudit } from '../services/audit.service';
 import { updateEnrollmentStats } from '../utils/enrollment-stats';
-
-interface AuthRequest extends Request {
-    user?: {
-        userId: string;
-        role: string;
-    };
-}
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const getDashboardData = async (req: AuthRequest, res: Response) => {
     try {
@@ -497,11 +491,9 @@ export const getAvailableCourses = async (req: AuthRequest, res: Response) => {
         // Verify user has a program
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            // @ts-ignore
             select: { programId: true }
         });
 
-        // @ts-ignore
         if (!user?.programId) {
             return res.status(403).json({ message: 'You must be assigned to an academic program to register.' });
         }
@@ -517,7 +509,6 @@ export const getAvailableCourses = async (req: AuthRequest, res: Response) => {
         const availableCourses = await prisma.course.findMany({
             where: {
                 id: { notIn: enrolledIds },
-                // @ts-ignore
                 programs: {
                     some: { id: user.programId }
                 }
@@ -525,7 +516,6 @@ export const getAvailableCourses = async (req: AuthRequest, res: Response) => {
             include: {
                 instructor: { select: { name: true } },
                 _count: { select: { enrollments: true } },
-                // @ts-ignore
                 department: true // Include department info
             },
             orderBy: { level: 'asc' }
@@ -550,7 +540,6 @@ export const enrollCourse = async (req: AuthRequest, res: Response) => {
         // Verify user has a program
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            // @ts-ignore
             select: { programId: true }
         });
 
@@ -584,5 +573,72 @@ export const enrollCourse = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Enrollment error:', error);
         res.status(500).json({ message: 'Error enrolling in course' });
+    }
+};
+
+export const getTranscript = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                profile: true,
+                program: { include: { department: true } },
+                enrollments: {
+                    include: {
+                        course: true
+                    },
+                    orderBy: { course: { code: 'asc' } }
+                }
+            }
+        });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Calculate GPA
+        const gradeMap: { [key: string]: number } = {
+            'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+            'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0
+        };
+
+        let totalPoints = 0;
+        let totalCredits = 0;
+
+        const transcriptCourses = user.enrollments.map(en => {
+            const credits = en.course.credits;
+            let points = 0;
+            if (en.grade && gradeMap[en.grade] !== undefined) {
+                points = gradeMap[en.grade] * credits;
+                totalPoints += points;
+                totalCredits += credits;
+            }
+
+            return {
+                code: en.course.code,
+                name: en.course.name,
+                credits: credits,
+                semester: en.course.semester,
+                grade: en.grade || 'In Progress',
+                points: points
+            };
+        });
+
+        const cgpa = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : "0.00";
+
+        res.json({
+            fullName: user.name,
+            studentId: "STU-" + user.id.substring(0, 4).toUpperCase(),
+            program: user.program?.name || 'Unassigned',
+            department: user.program?.department?.name || 'Unassigned',
+            email: user.email,
+            cgpa,
+            courses: transcriptCourses,
+            generatedAt: new Date()
+        });
+
+    } catch (error) {
+        console.error('Get transcript error:', error);
+        res.status(500).json({ message: 'Error fetching transcript' });
     }
 };

@@ -4,13 +4,7 @@ import bcrypt from 'bcryptjs';
 import { logAudit } from '../services/audit.service';
 import { generateUserId } from '../utils/id.utils';
 import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/email.service';
-
-interface AuthRequest extends Request {
-    user?: {
-        userId: string;
-        role: string;
-    };
-}
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const resetUserPassword = async (req: Request, res: Response) => {
     try {
@@ -60,7 +54,6 @@ export const createStudent = async (req: Request, res: Response) => {
                 username,
                 password: hashedPassword,
                 role: 'STUDENT',
-                // @ts-ignore
                 programId: programId || null,
                 profile: {
                     create: {} // Create empty profile
@@ -72,7 +65,6 @@ export const createStudent = async (req: Request, res: Response) => {
                 email: true,
                 username: true,
                 role: true,
-                // @ts-ignore
                 program: { select: { name: true } },
                 createdAt: true
             }
@@ -240,9 +232,7 @@ export const updateStudent = async (req: Request, res: Response) => {
 
         const student = await prisma.user.update({
             where: { id },
-            // @ts-ignore
             data: { name, email, programId },
-            // @ts-ignore
             include: { program: true }
         });
 
@@ -261,7 +251,6 @@ export const getAllStudents = async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 email: true,
-                // @ts-ignore
                 program: { select: { id: true, name: true, department: { select: { name: true } } } },
                 createdAt: true
             }
@@ -282,7 +271,6 @@ export const getAllCourses = async (req: Request, res: Response) => {
                 instructor: {
                     select: { id: true, name: true, email: true }
                 },
-                // @ts-ignore
                 programs: {
                     select: { id: true, name: true, code: true }
                 }
@@ -316,7 +304,6 @@ export const createCourse = async (req: Request, res: Response) => {
                 level: level || 100,
                 semester: semester || 1,
                 credits: credits || 3,
-                // @ts-ignore
                 programs: {
                     connect: req.body.programIds?.map((id: string) => ({ id })) || []
                 }
@@ -351,7 +338,6 @@ export const updateCourse = async (req: Request, res: Response) => {
             where: { id },
             data: {
                 name, code, description, credits, instructorId, level, semester,
-                // @ts-ignore
                 programs: {
                     set: req.body.programIds?.map((id: string) => ({ id })) || []
                 }

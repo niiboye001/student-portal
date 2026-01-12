@@ -2,13 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { sendGradeNotification } from '../services/email.service';
 import { updateEnrollmentStats } from '../utils/enrollment-stats';
-
-interface AuthRequest extends Request {
-    user?: {
-        userId: string;
-        role: string;
-    };
-}
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const getMyCourses = async (req: Request, res: Response) => {
     try {

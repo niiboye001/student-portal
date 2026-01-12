@@ -2,7 +2,6 @@ import prisma from '../utils/prisma';
 
 export const logAudit = async (userId: string, action: string, resource: string, details?: any, ipAddress?: string) => {
     try {
-        // @ts-ignore
         await prisma.auditLog.create({
             data: {
                 userId,

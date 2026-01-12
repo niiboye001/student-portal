@@ -2,13 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { z } from 'zod';
 import { logAudit } from '../services/audit.service';
-
-interface AuthRequest extends Request {
-    user?: {
-        userId: string;
-        role: string;
-    };
-}
+import { AuthRequest } from '../middleware/auth.middleware';
 
 // Validation Schemas
 const createDepartmentSchema = z.object({
@@ -25,9 +19,7 @@ const createProgramSchema = z.object({
 // --- Departments ---
 
 export const getDepartments = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
-        // @ts-ignore
         const departments = await prisma.department.findMany({
             include: {
                 programs: {
@@ -60,12 +52,9 @@ export const getDepartments = async (req: Request, res: Response) => {
 // But I will stick to single replaces for now.
 
 export const createDepartment = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
-        // @ts-ignore
         const { name, code } = createDepartmentSchema.parse(req.body);
 
-        // @ts-ignore
         const existing = await prisma.department.findFirst({
             where: { OR: [{ name }, { code }] }
         });
@@ -74,7 +63,6 @@ export const createDepartment = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Department with this name or code already exists' });
         }
 
-        // @ts-ignore
         const department = await prisma.department.create({
             data: { name, code }
         });
@@ -89,14 +77,12 @@ export const createDepartment = async (req: Request, res: Response) => {
 };
 
 export const deleteDepartment = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
         const { id } = req.params;
 
         // Check for dependencies? Prisma might restrict or cascade.
         // Usually good to check if it has programs/courses.
 
-        // @ts-ignore
         await prisma.department.delete({ where: { id } });
 
         await logAudit((req as AuthRequest).user!.userId, 'DELETE_DEPARTMENT', 'DEPARTMENT', { id }, req.ip);
@@ -111,9 +97,7 @@ export const deleteDepartment = async (req: Request, res: Response) => {
 // --- Programs ---
 
 export const getPrograms = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
-        // @ts-ignore
         const programs = await prisma.program.findMany({
             include: {
                 department: true,
@@ -131,12 +115,9 @@ export const getPrograms = async (req: Request, res: Response) => {
 };
 
 export const createProgram = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
-        // @ts-ignore
         const { name, code, departmentId } = createProgramSchema.parse(req.body);
 
-        // @ts-ignore
         const existing = await prisma.program.findUnique({
             where: { code }
         });
@@ -145,7 +126,6 @@ export const createProgram = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Program with this code already exists' });
         }
 
-        // @ts-ignore
         const program = await prisma.program.create({
             data: { name, code, departmentId }
         });
@@ -160,11 +140,9 @@ export const createProgram = async (req: Request, res: Response) => {
 };
 
 export const deleteProgram = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
         const { id } = req.params;
 
-        // @ts-ignore
         await prisma.program.delete({ where: { id } });
 
         await logAudit((req as AuthRequest).user!.userId, 'DELETE_PROGRAM', 'PROGRAM', { id }, req.ip);
@@ -177,14 +155,11 @@ export const deleteProgram = async (req: Request, res: Response) => {
 };
 
 export const updateDepartment = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
         const { id } = req.params;
-        // @ts-ignore
         const { name, code } = createDepartmentSchema.parse(req.body);
 
         // Check for duplicates excluding self
-        // @ts-ignore
         const existing = await prisma.department.findFirst({
             where: {
                 OR: [{ name }, { code }],
@@ -196,7 +171,6 @@ export const updateDepartment = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Department with this name or code already exists' });
         }
 
-        // @ts-ignore
         const department = await prisma.department.update({
             where: { id },
             data: { name, code }
@@ -212,13 +186,10 @@ export const updateDepartment = async (req: Request, res: Response) => {
 };
 
 export const updateProgram = async (req: Request, res: Response) => {
-    // @ts-ignore
     try {
         const { id } = req.params;
-        // @ts-ignore
         const { name, code, departmentId } = createProgramSchema.parse(req.body);
 
-        // @ts-ignore
         const existing = await prisma.program.findFirst({
             where: {
                 code,
@@ -230,7 +201,6 @@ export const updateProgram = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Program with this code already exists' });
         }
 
-        // @ts-ignore
         const program = await prisma.program.update({
             where: { id },
             data: { name, code, departmentId }
