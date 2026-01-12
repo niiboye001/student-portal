@@ -26,6 +26,8 @@ const StudentCourseDetails = () => {
     // Module Accordion State
     const [expandedModules, setExpandedModules] = useState({});
 
+    const [attendanceData, setAttendanceData] = useState(null);
+
     useEffect(() => {
         const fetchDetails = async () => {
             try {
@@ -47,6 +49,15 @@ const StudentCourseDetails = () => {
             fetchDetails();
         }
     }, [courseId]);
+
+    // Fetch Attendance when tab is active
+    useEffect(() => {
+        if (activeTab === 'attendance' && courseId && !attendanceData) {
+            api.get(`/courses/${courseId}/attendance`)
+                .then(res => setAttendanceData(res.data))
+                .catch(err => console.error("Failed to load attendance", err));
+        }
+    }, [activeTab, courseId]);
 
     const toggleModule = (moduleId) => {
         setExpandedModules(prev => ({
@@ -147,7 +158,7 @@ const StudentCourseDetails = () => {
 
             {/* Navigation Tabs */}
             <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl px-4 sticky top-0 z-10">
-                {['overview', 'modules', 'assignments', 'announcements', 'discussion'].map((tab) => (
+                {['overview', 'modules', 'assignments', 'announcements', 'attendance', 'discussion'].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => {
@@ -161,10 +172,12 @@ const StudentCourseDetails = () => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             }`}
                     >
+                        {activeTab === tab}
                         {tab === 'overview' && <BookOpen size={16} />}
                         {tab === 'modules' && <AlignLeft size={16} />}
                         {tab === 'assignments' && <FileText size={16} />}
                         {tab === 'announcements' && <Bell size={16} />}
+                        {tab === 'attendance' && <Calendar size={16} />}
                         {tab === 'discussion' && <MessageSquare size={16} />}
                         {tab === 'discussion' && course._count?.discussions ? (
                             <span className="flex items-center gap-2">
@@ -292,6 +305,63 @@ const StudentCourseDetails = () => {
                                     <p className="text-gray-500 dark:text-gray-400">No assignments assigned.</p>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* ATTENDANCE TAB */}
+                    {activeTab === 'attendance' && (
+                        <div className="space-y-6">
+                            {/* Stats Cards */}
+                            {attendanceData?.stats && (
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 text-center">
+                                        <div className="text-sm text-gray-500 mb-1">Presence</div>
+                                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                            {attendanceData.stats.percentage}%
+                                        </div>
+                                    </div>
+                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 text-center">
+                                        <div className="text-sm text-gray-500 mb-1">Attended</div>
+                                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                                            {attendanceData.stats.present}/{attendanceData.stats.total}
+                                        </div>
+                                    </div>
+                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 text-center">
+                                        <div className="text-sm text-gray-500 mb-1">Absences</div>
+                                        <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                            {attendanceData.stats.total - attendanceData.stats.present}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Records List */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 font-semibold flex justify-between">
+                                    <span>Date</span>
+                                    <span>Status</span>
+                                </div>
+                                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    {attendanceData?.records && attendanceData.records.length > 0 ? (
+                                        attendanceData.records.map(record => (
+                                            <div key={record.id} className="p-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                                                <div className="text-gray-900 dark:text-white font-medium">
+                                                    {new Date(record.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                </div>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${record.status === 'PRESENT' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                                                    record.status === 'LATE' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                                                        record.status === 'EXCUSED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                                    }`}>
+                                                    {record.status}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="p-8 text-center text-gray-500">No attendance records found.</div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     )}
 

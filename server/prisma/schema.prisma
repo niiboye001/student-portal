@@ -28,6 +28,8 @@ model User {
   program          Program?       @relation(fields: [programId], references: [id])
   invoices         Invoice[]
   discussions      Discussion[]
+  attendanceRecords Attendance[] @relation("StudentAttendance")
+  markedAttendance  Attendance[] @relation("InstructorAttendance")
 }
 
 model Profile {
@@ -58,6 +60,8 @@ model Course {
   department    Department?     @relation(fields: [departmentId], references: [id])
   programs      Program[]
   discussions   Discussion[]
+  attendance    Attendance[]
+
 }
 
 model Enrollment {
@@ -262,4 +266,26 @@ model Discussion {
   replies   Discussion[] @relation("Thread")
 
   @@index([courseId])
+}
+
+model Attendance {
+  id          String   @id @default(uuid())
+  date        DateTime
+  status      String   // PRESENT, ABSENT, LATE, EXCUSED
+  
+  studentId   String
+  student     User     @relation("StudentAttendance", fields: [studentId], references: [id])
+  
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  markedById  String
+  markedBy    User     @relation("InstructorAttendance", fields: [markedById], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([courseId])
+  @@unique([studentId, courseId, date]) // Prevent duplicate records for same day
 }

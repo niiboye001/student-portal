@@ -66,6 +66,63 @@ const StaffCourseDetails = () => {
     const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '' });
     const [announcementToDelete, setAnnouncementToDelete] = useState(null);
 
+    // Attendance State
+    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [attendanceRoster, setAttendanceRoster] = useState([]);
+
+    const fetchAttendance = async () => {
+        try {
+            const { data } = await api.get(`/courses/${id}/attendance/date?date=${attendanceDate}`);
+            setAttendanceRoster(data.roster);
+        } catch (error) {
+            console.error('Failed to fetch attendance', error);
+            toast.error('Failed to load attendance register');
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'attendance' && id) {
+            fetchAttendance();
+        }
+    }, [activeTab, attendanceDate, id]);
+
+    const handleStatusChange = (studentId, status) => {
+        setAttendanceRoster(prev => prev.map(item =>
+            item.student.id === studentId ? { ...item, status } : item
+        ));
+    };
+
+    const markAllPresent = () => {
+        setAttendanceRoster(prev => prev.map(item => ({ ...item, status: 'PRESENT' })));
+    };
+
+    const saveAttendance = async () => {
+        setSubmitting(true);
+        const loadingToast = toast.loading('Saving attendance...');
+        try {
+            const records = attendanceRoster
+                .filter(item => item.status) // Only send marked records
+                .map(item => ({
+                    studentId: item.student.id,
+                    status: item.status
+                }));
+
+            await api.post(`/courses/${id}/attendance/bulk`, {
+                date: attendanceDate,
+                courseId: id,
+                records
+            });
+
+            toast.success('Attendance saved', { id: loadingToast });
+            fetchAttendance(); // Refresh to ensure sync
+        } catch (error) {
+            console.error('Save attendance error', error);
+            toast.error('Failed to save attendance', { id: loadingToast });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const fetchDetails = async () => {
         try {
             const { data } = await api.get(`/staff/courses/${id}`);
@@ -422,6 +479,16 @@ const StaffCourseDetails = () => {
                         <Bell size={18} />
                         Announcements
                     </button>
+                    <button
+                        onClick={() => setActiveTab('attendance')}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap ${activeTab === 'attendance'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                    >
+                        <CheckCircle size={18} />
+                        Attendance
+                    </button>
                 </nav>
             </div>
 
@@ -733,6 +800,101 @@ const StaffCourseDetails = () => {
                                     <p>No announcements posted yet.</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+
+                {activeTab === 'attendance' && (
+                    <div className="p-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Attendance Register</h3>
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="date"
+                                    className="rounded-lg border border-gray-300 dark:border-gray-600 p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    value={attendanceDate}
+                                    onChange={(e) => setAttendanceDate(e.target.value)}
+                                    max={new Date().toISOString().split('T')[0]}
+                                />
+                                <button
+                                    onClick={saveAttendance}
+                                    disabled={submitting}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {submitting ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                            {/* Toolbar */}
+                            <div className="p-4 bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                    {attendanceRoster.length} Students
+                                </span>
+                                <button
+                                    onClick={markAllPresent}
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                >
+                                    Mark All Present
+                                </button>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                                        <tr>
+                                            <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
+                                            <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                        {attendanceRoster.length > 0 ? (
+                                            attendanceRoster.map((item) => (
+                                                <tr key={item.student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center">
+                                                            <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold mr-3">
+                                                                {item.student.name.charAt(0)}
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-sm font-medium text-gray-900 dark:text-white">{item.student.name}</div>
+                                                                <div className="text-xs text-gray-500">{item.student.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex gap-2">
+                                                            {['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'].map(status => (
+                                                                <button
+                                                                    key={status}
+                                                                    onClick={() => handleStatusChange(item.student.id, status)}
+                                                                    className={`px-3 py-1 text-xs font-bold rounded-full transition-all border ${item.status === status
+                                                                        ? status === 'PRESENT' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                                                                            : status === 'LATE' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'
+                                                                                : status === 'EXCUSED' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                                                                                    : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
+                                                                        : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                                        }`}
+                                                                >
+                                                                    {status}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="2" className="px-6 py-12 text-center text-gray-500">
+                                                    No students found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
