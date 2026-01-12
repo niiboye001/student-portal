@@ -255,6 +255,9 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
                         },
                         announcements: {
                             orderBy: { createdAt: 'desc' }
+                        },
+                        _count: {
+                            select: { discussions: true }
                         }
                     }
                 }
@@ -265,10 +268,20 @@ export const getCourseDetails = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: 'Course enrollment not found' });
         }
 
+        const unreadCount = await prisma.discussion.count({
+            where: {
+                courseId: id,
+                createdAt: {
+                    gt: enrollment.lastViewedDiscussionsAt
+                }
+            }
+        });
+
         const detailedCourse = {
             ...enrollment.course,
             grade: enrollment.grade,
             progress: enrollment.progress,
+            unreadDiscussionsCount: unreadCount,
         };
 
         res.json(detailedCourse);

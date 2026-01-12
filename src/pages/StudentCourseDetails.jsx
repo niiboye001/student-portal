@@ -5,8 +5,9 @@ import toast from 'react-hot-toast';
 import {
     BookOpen, FileText, Bell, ChevronDown, ChevronUp,
     Video, Link, File, AlignLeft, CheckCircle2,
-    AlertCircle, Clock, Calendar, X, Download, User
+    AlertCircle, Clock, Calendar, X, Download, User, MessageSquare
 } from 'lucide-react';
+import CourseDiscussion from '../components/CourseDiscussion';
 
 const StudentCourseDetails = () => {
     const { id: courseId } = useParams();
@@ -146,10 +147,15 @@ const StudentCourseDetails = () => {
 
             {/* Navigation Tabs */}
             <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl px-4 sticky top-0 z-10">
-                {['overview', 'modules', 'assignments', 'announcements'].map((tab) => (
+                {['overview', 'modules', 'assignments', 'announcements', 'discussion'].map((tab) => (
                     <button
                         key={tab}
-                        onClick={() => setActiveTab(tab)}
+                        onClick={() => {
+                            setActiveTab(tab);
+                            if (tab === 'discussion' && course?.unreadDiscussionsCount > 0) {
+                                setCourse(prev => ({ ...prev, unreadDiscussionsCount: 0 }));
+                            }
+                        }}
                         className={`py-4 px-6 font-medium text-sm capitalize whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${activeTab === tab
                             ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                             : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -159,7 +165,17 @@ const StudentCourseDetails = () => {
                         {tab === 'modules' && <AlignLeft size={16} />}
                         {tab === 'assignments' && <FileText size={16} />}
                         {tab === 'announcements' && <Bell size={16} />}
-                        {tab}
+                        {tab === 'discussion' && <MessageSquare size={16} />}
+                        {tab === 'discussion' && course._count?.discussions ? (
+                            <span className="flex items-center gap-2">
+                                {tab} ({course._count.discussions})
+                                {course.unreadDiscussionsCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                        {course.unreadDiscussionsCount}
+                                    </span>
+                                )}
+                            </span>
+                        ) : tab}
                     </button>
                 ))}
             </div>
@@ -302,6 +318,11 @@ const StudentCourseDetails = () => {
                                 </div>
                             )}
                         </div>
+                    )}
+
+                    {/* DISCUSSION TAB */}
+                    {activeTab === 'discussion' && (
+                        <CourseDiscussion courseId={courseId} />
                     )}
 
                     {/* OVERVIEW TAB */}

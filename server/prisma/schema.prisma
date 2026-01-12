@@ -27,6 +27,7 @@ model User {
   programId        String?
   program          Program?       @relation(fields: [programId], references: [id])
   invoices         Invoice[]
+  discussions      Discussion[]
 }
 
 model Profile {
@@ -56,6 +57,7 @@ model Course {
   departmentId  String?
   department    Department?     @relation(fields: [departmentId], references: [id])
   programs      Program[]
+  discussions   Discussion[]
 }
 
 model Enrollment {
@@ -65,6 +67,7 @@ model Enrollment {
   grade      String?
   progress   Int      @default(0)
   enrolledAt DateTime @default(now())
+  lastViewedDiscussionsAt DateTime @default(now())
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id])
 
@@ -240,4 +243,22 @@ model Payment {
   status        String   @default("COMPLETED")
 
   @@index([invoiceId])
+}
+
+model Discussion {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  parentId  String?
+  parent    Discussion? @relation("Thread", fields: [parentId], references: [id])
+  replies   Discussion[] @relation("Thread")
+
+  @@index([courseId])
 }

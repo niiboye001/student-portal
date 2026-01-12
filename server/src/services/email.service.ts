@@ -16,7 +16,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             console.warn('Email credentials not found in env. Email not sent.');
-            console.log(`[Email Mock] To: ${to}, Subject: ${subject}`);
+            // console.log(`[Email Mock] To: ${to}, Subject: ${subject}`);
             return;
         }
 

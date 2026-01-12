@@ -11,6 +11,7 @@ import academicRoutes from './routes/academic.routes';
 import financeRoutes from './routes/finance.routes';
 import announcementRoutes from './routes/announcement.routes';
 import scheduleRoutes from './routes/schedule.routes';
+import courseRoutes from './routes/course.routes';
 import { rateLimit } from 'express-rate-limit';
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/academic', academicRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
