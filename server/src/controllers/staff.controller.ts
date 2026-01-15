@@ -642,3 +642,161 @@ export const deleteModuleItem = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error deleting item' });
     }
 };
+
+export const getCourseGradebook = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id: courseId } = req.params;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        // Verify ownership
+        const course = await prisma.course.findFirst({
+            where: { id: courseId, instructorId: userId }
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found or unauthorized' });
+        }
+
+        // 1. Fetch Students
+        const enrollments = await prisma.enrollment.findMany({
+            where: { courseId },
+            include: {
+                user: {
+                    select: { id: true, name: true, email: true, username: true }
+                }
+            },
+            orderBy: { user: { name: 'asc' } }
+        });
+
+        // Deduplicate students by ID
+        const uniqueStudentsMap = new Map();
+        enrollments.forEach(e => {
+            if (!uniqueStudentsMap.has(e.user.id)) {
+                uniqueStudentsMap.set(e.user.id, e.user);
+            }
+        });
+        const students = Array.from(uniqueStudentsMap.values());
+
+        // 2. Fetch Assignments
+        const assignments = await prisma.assignment.findMany({
+            where: { courseId },
+            orderBy: { dueDate: 'asc' },
+            select: { id: true, title: true, dueDate: true, status: true }
+        });
+
+        // 3. Fetch All Submissions for these assignments
+        const assignmentIds = assignments.map(a => a.id);
+        const submissions = await prisma.submission.findMany({
+            where: {
+                assignmentId: { in: assignmentIds }
+            },
+            select: {
+                assignmentId: true,
+                studentId: true,
+                grade: true,
+                submittedAt: true
+                // We don't have explicit status column in Submission model? 
+                // Let's check schema/types. 
+                // Submission: content, feedback, grade, submittedAt...
+                // We'll infer status: if grade -> 'GRADED', if submittedAt -> 'SUBMITTED'
+            }
+        });
+
+        // Structure for frontend: Map of studentId -> { assignmentId -> gradeInfo }
+        const grades: Record<string, Record<string, any>> = {};
+
+        submissions.forEach(sub => {
+            if (!grades[sub.studentId]) grades[sub.studentId] = {};
+            grades[sub.studentId][sub.assignmentId] = {
+                grade: sub.grade,
+                submitted: true // implies exists in DB
+            };
+        });
+
+        res.json({
+            students,
+            assignments,
+            grades
+        });
+
+    } catch (error) {
+        console.error('Get gradebook error:', error);
+        res.status(500).json({ message: 'Error fetching gradebook' });
+    }
+};
+
+export const bulkUpdateGrades = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as AuthRequest).user?.userId;
+        const { id: courseId } = req.params;
+        const { updates } = req.body; // Array of { studentId, assignmentId, grade }
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        if (!Array.isArray(updates)) {
+            return res.status(400).json({ message: 'Invalid payload' });
+        }
+
+        // Verify ownership
+        const course = await prisma.course.findFirst({
+            where: { id: courseId, instructorId: userId }
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found or unauthorized' });
+        }
+
+        // Transactional update
+        await prisma.$transaction(async (tx) => {
+            for (const update of updates) {
+                const { studentId, assignmentId, grade } = update;
+                if (!studentId || !assignmentId) continue;
+
+                // Create or Update Submission
+                // Use upsert
+                await tx.submission.upsert({
+                    where: {
+                        assignmentId_studentId: {
+                            assignmentId,
+                            studentId
+                        }
+                    },
+                    update: {
+                        grade,
+                        // If updating an existing submission, keep existing content/submittedAt
+                        // But if it was just a manual entry, we might want to ensure feedback/content?
+                        // For now, minimal update of grade.
+                        feedback: 'Graded via Gradebook'
+                    },
+                    create: {
+                        assignmentId,
+                        studentId,
+                        grade,
+                        content: 'Manual Grade', // Placeholder for non-submitted items
+                        feedback: 'Graded via Gradebook',
+                        submittedAt: new Date()
+                    }
+                });
+
+                // Note: We are not calling updateEnrollmentStats here in loop for performance,
+                // but ideally we should trigger a background job or update important stats.
+                // For MVP, we can skip or do it after loop if array is small.
+                // Let's do it after loop if possible, or just accept eventual consistency if we rely on it elsewhere.
+                // Actually, let's call it for each to be safe, assuming reasonable batch size.
+                await updateEnrollmentStats(studentId, courseId);
+            }
+        });
+
+        res.json({ message: 'Grades updated successfully' });
+
+    } catch (error) {
+        console.error('Bulk update grades error:', error);
+        res.status(500).json({ message: 'Error updating grades' });
+    }
+};

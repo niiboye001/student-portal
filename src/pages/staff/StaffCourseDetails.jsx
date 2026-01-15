@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, MapPin, Clock, Mail, BookOpen, Plus, Trash2, X, FileText, CheckCircle, AlignLeft, Video, Link as LinkIcon, Bell, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, MapPin, Clock, Mail, BookOpen, Plus, Trash2, X, FileText, CheckCircle, AlignLeft, Video, Link as LinkIcon, Bell, Edit2, ChevronDown, ChevronUp, Table, Save } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { jsPDF } from 'jspdf';
 
+// Force Rebuild ID: 12345
 const StaffCourseDetails = () => {
     const { id } = useParams();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('roster'); // 'roster', 'assignments', 'schedule'
+    const [activeTab, setActiveTab] = useState('roster'); // 'roster', 'assignments', 'schedule', 'gradebook'
 
     // Schedule Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,6 +50,12 @@ const StaffCourseDetails = () => {
     const [gradingForm, setGradingForm] = useState({ grade: '', feedback: '' });
     const [submittingGrade, setSubmittingGrade] = useState(false);
 
+    // Gradebook State
+    const [gradebookData, setGradebookData] = useState({ students: [], assignments: [], grades: {} });
+    const [gradeUpdates, setGradeUpdates] = useState({});
+    const [loadingGradebook, setLoadingGradebook] = useState(false);
+    const [savingGrades, setSavingGrades] = useState(false);
+
     // Module States
     const [moduleModalOpen, setModuleModalOpen] = useState(false);
     const [moduleItemModalOpen, setModuleItemModalOpen] = useState(false);
@@ -80,11 +87,55 @@ const StaffCourseDetails = () => {
         }
     };
 
+    const fetchGradebook = async () => {
+        setLoadingGradebook(true);
+        try {
+            const { data } = await api.get(`/courses/${id}/gradebook`);
+            setGradebookData(data);
+            setGradeUpdates({}); // Clear unsaved changes on refresh
+        } catch (error) {
+            console.error('Failed to fetch gradebook', error);
+            toast.error('Failed to load gradebook');
+        } finally {
+            setLoadingGradebook(false);
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'attendance' && id) {
             fetchAttendance();
         }
+        if (activeTab === 'gradebook' && id) {
+            fetchGradebook();
+        }
     }, [activeTab, attendanceDate, id]);
+
+    const handleGradeCellChange = (studentId, assignmentId, value) => {
+        const key = `${studentId}_${assignmentId}`;
+        setGradeUpdates(prev => ({ ...prev, [key]: value }));
+    };
+
+    const saveGradebookChanges = async () => {
+        setSavingGrades(true);
+        const loadingToast = toast.loading('Saving grades...');
+
+        // Convert updates map to array payload
+        const updates = Object.entries(gradeUpdates).map(([key, grade]) => {
+            const [studentId, assignmentId] = key.split('_');
+            return { studentId, assignmentId, grade };
+        });
+
+        try {
+            await api.post(`/courses/${id}/gradebook/bulk`, { updates });
+            toast.success('Grades saved successfully', { id: loadingToast });
+            fetchGradebook(); // Refresh data
+        } catch (error) {
+            console.error('Failed to save grades', error);
+            toast.error('Failed to save grades', { id: loadingToast });
+        } finally {
+            setSavingGrades(false);
+        }
+    };
 
     const handleStatusChange = (studentId, status) => {
         setAttendanceRoster(prev => prev.map(item =>
@@ -460,6 +511,16 @@ const StaffCourseDetails = () => {
                         Assignments
                     </button>
                     <button
+                        onClick={() => setActiveTab('gradebook')}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap ${activeTab === 'gradebook'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                    >
+                        <Table size={18} />
+                        Gradebook
+                    </button>
+                    <button
                         onClick={() => setActiveTab('modules')}
                         className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap ${activeTab === 'modules'
                             ? 'border-blue-500 text-blue-600 dark:text-blue-400'
@@ -533,6 +594,113 @@ const StaffCourseDetails = () => {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {activeTab === 'gradebook' && (
+                    <div className="p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                <Table size={20} className="text-blue-500" />
+                                <span className="flex-1">Digital Gradebook</span>
+                                {Object.keys(gradeUpdates).length > 0 && (
+                                    <span className="text-xs font-normal px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full border border-yellow-200">
+                                        Unsaved Changes
+                                    </span>
+                                )}
+                            </h3>
+                            <button
+                                onClick={saveGradebookChanges}
+                                disabled={Object.keys(gradeUpdates).length === 0 || savingGrades}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${Object.keys(gradeUpdates).length > 0
+                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+                                    }`}
+                            >
+                                <Save size={16} />
+                                {savingGrades ? 'Saving...' : 'Save All Grades'}
+                            </button>
+                        </div>
+
+                        {loadingGradebook ? (
+                            <div className="text-center py-12 text-gray-500">Loading gradebook...</div>
+                        ) : !gradebookData.students.length ? (
+                            <div className="text-center py-12 text-gray-500">No students found.</div>
+                        ) : !gradebookData.assignments.length ? (
+                            <div className="text-center py-12 text-gray-500">No assignments created yet.</div>
+                        ) : (
+                            <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                                        <tr>
+                                            <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 sticky left-0 bg-gray-50 dark:bg-gray-800 z-10 border-b border-gray-200 dark:border-gray-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                                Student Name
+                                            </th>
+                                            {gradebookData.assignments.map(ass => (
+                                                <th key={ass.id} className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">
+                                                    <div className="flex flex-col">
+                                                        <span className="truncate max-w-[150px]" title={ass.title}>{ass.title}</span>
+                                                        <span className="text-[10px] font-normal text-gray-400">{new Date(ass.dueDate).toLocaleDateString()}</span>
+                                                    </div>
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                        {gradebookData.students.map(student => (
+                                            <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-800 z-10 border-r border-gray-200 dark:border-gray-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                                    {student.name}
+                                                </td>
+                                                {gradebookData.assignments.map(ass => {
+                                                    // Get current value: Check edits first, then DB data
+                                                    const editKey = `${student.id}_${ass.id}`;
+                                                    const dbEntry = gradebookData.grades[student.id]?.[ass.id];
+                                                    const currentValue = gradeUpdates[editKey] !== undefined
+                                                        ? gradeUpdates[editKey]
+                                                        : (dbEntry?.grade || '');
+
+                                                    const isGraded = !!dbEntry?.grade;
+                                                    const isSubmitted = dbEntry?.submitted && !dbEntry?.grade;
+
+                                                    // Determine border color for visual cue
+                                                    let borderColor = 'border-gray-200 dark:border-gray-600';
+                                                    if (gradeUpdates[editKey] !== undefined) borderColor = 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900';
+                                                    else if (isGraded) borderColor = 'border-green-300 dark:border-green-700';
+                                                    else if (isSubmitted) borderColor = 'border-yellow-300 dark:border-yellow-700';
+
+                                                    return (
+                                                        <td key={ass.id} className="px-4 py-2">
+                                                            <input
+                                                                type="text"
+                                                                value={currentValue}
+                                                                onChange={(e) => handleGradeCellChange(student.id, ass.id, e.target.value)}
+                                                                placeholder={isSubmitted ? "Grade now..." : "-"}
+                                                                className={`w-full px-2 py-1 text-sm rounded border ${borderColor} focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-all`}
+                                                            />
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        <div className="mt-4 flex gap-4 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded-sm border border-green-300 bg-white dark:bg-gray-700"></div>
+                                <span>Graded</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded-sm border border-yellow-300 bg-white dark:bg-gray-700"></div>
+                                <span>Submitted / Pending</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 rounded-sm border border-blue-400 bg-white dark:bg-gray-700"></div>
+                                <span>Edited (Unsaved)</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 

@@ -29,7 +29,9 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(helmet());
-app.use(limiter);
+if (process.env.NODE_ENV === 'production') {
+    app.use(limiter);
+}
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], // Frontend URLs
     credentials: true
