@@ -646,7 +646,7 @@ export const deleteModuleItem = async (req: Request, res: Response) => {
 export const getCourseGradebook = async (req: Request, res: Response) => {
     try {
         const userId = (req as AuthRequest).user?.userId;
-        const { id: courseId } = req.params;
+        const { courseId } = req.params;
 
         if (!userId) {
             return res.status(401).json({ message: 'Unauthorized' });

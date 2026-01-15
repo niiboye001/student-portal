@@ -1,3 +1,4 @@
+
 import './config/env';
 import app from './app';
 import prisma from './utils/prisma';
@@ -11,6 +12,11 @@ app.listen(Number(PORT), '127.0.0.1', () => {
 
 // Handle Shutdown
 process.on('SIGINT', async () => {
+    console.log('Received SIGINT. Shutting down...');
     await prisma.$disconnect();
     process.exit(0);
 });
+
+
+
+

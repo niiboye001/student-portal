@@ -7,6 +7,7 @@ import { upload } from '../middleware/upload.middleware';
 
 const router = Router();
 
+
 router.use(authenticateToken); // Shared by students and staff
 
 router.get('/:courseId/discussions', getCourseDiscussions);
@@ -21,5 +22,7 @@ router.post('/:courseId/attendance/bulk', markBulkAttendance);
 // Gradebook
 router.get('/:courseId/gradebook', getCourseGradebook);
 router.post('/:courseId/gradebook/bulk', bulkUpdateGrades);
+
+
 
 export default router;

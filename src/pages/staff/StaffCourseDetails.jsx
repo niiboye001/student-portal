@@ -89,8 +89,23 @@ const StaffCourseDetails = () => {
 
     const fetchGradebook = async () => {
         setLoadingGradebook(true);
+        setGradebookData({ students: [], assignments: [], grades: {} }); // Clear previous data immediately
         try {
             const { data } = await api.get(`/courses/${id}/gradebook`);
+
+            // Deduplicate students on frontend as safety net
+            const uniqueStudents = [];
+            const seenIds = new Set();
+            if (data.students) {
+                data.students.forEach(student => {
+                    if (!seenIds.has(student.id)) {
+                        seenIds.add(student.id);
+                        uniqueStudents.push(student);
+                    }
+                });
+                data.students = uniqueStudents;
+            }
+
             setGradebookData(data);
             setGradeUpdates({}); // Clear unsaved changes on refresh
         } catch (error) {
