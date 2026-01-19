@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, MapPin, Clock, Mail, BookOpen, Plus, Trash2, X, FileText, CheckCircle, AlignLeft, Video, Link as LinkIcon, Bell, Edit2, ChevronDown, ChevronUp, Table, Save } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, MapPin, Clock, Mail, BookOpen, Plus, Trash2, X, FileText, CheckCircle, AlignLeft, Video, Link as LinkIcon, Bell, Edit2, ChevronDown, ChevronUp, Table, Save, Search, Printer } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -44,6 +44,10 @@ const StaffCourseDetails = () => {
     const [selectedAssignmentForReview, setSelectedAssignmentForReview] = useState(null);
     const [submissions, setSubmissions] = useState([]);
     const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+    // Search and Filter State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
 
     // Grading State
     const [gradingStudent, setGradingStudent] = useState(null); // The student being graded
@@ -323,6 +327,9 @@ const StaffCourseDetails = () => {
         setSelectedAssignmentForReview(assignment);
         setSubmissionsModalOpen(true);
         setLoadingSubmissions(true);
+        // Reset filters
+        setSearchTerm('');
+        setStatusFilter('ALL');
         try {
             const { data } = await api.get(`/staff/courses/${id}/assignments/${assignment.id}/submissions`);
             setSubmissions(data);
@@ -1234,21 +1241,54 @@ const StaffCourseDetails = () => {
 
             {/* Submissions Review Modal */}
             {submissionsModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <div id="printable-area" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-7xl overflow-hidden h-[80vh] flex flex-col">
-                        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 shrink-0">
-                            <div>
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center bg-gray-50 dark:bg-gray-700/50 shrink-0 gap-4 no-print">
+                            <div className="flex-1">
                                 <h3 className="font-bold text-lg text-gray-900 dark:text-white">Submission Review</h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">{selectedAssignmentForReview?.title}</p>
                             </div>
-                            <button onClick={() => setSubmissionsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                                <X size={20} />
-                            </button>
+
+                            {/* Filters & Actions */}
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <div className="relative flex-1 md:w-64">
+                                    <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search student..."
+                                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <select
+                                    className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    <option value="ALL">All Status</option>
+                                    <option value="SUBMITTED">Submitted</option>
+                                    <option value="GRADED">Graded</option>
+                                    <option value="MISSING">Missing/Pending</option>
+                                </select>
+                                <button
+                                    onClick={() => window.print()}
+                                    className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-600"
+                                    title="Print List"
+                                >
+                                    <Printer size={18} />
+                                </button>
+                                <button onClick={() => setSubmissionsModalOpen(false)} className="ml-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                    <X size={20} />
+                                </button>
+                            </div>
                         </div>
+
+
 
                         <div className="flex-1 overflow-y-auto p-0">
                             {loadingSubmissions ? (
-                                <div className="flex items-center justify-center h-full">
+                                <div className="flex items-center justify-center h-full no-print">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                 </div>
                             ) : (
@@ -1258,13 +1298,19 @@ const StaffCourseDetails = () => {
                                             <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
                                             <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                                             <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Submitted At</th>
-                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">Content</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3 no-print">Content</th>
                                             <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
-                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                            <th className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider no-print">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                        {submissions.map((item) => (
+                                        {submissions.filter(item => {
+                                            const matchesSearch = item.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                item.student.email.toLowerCase().includes(searchTerm.toLowerCase());
+                                            const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter ||
+                                                (statusFilter === 'MISSING' && (item.status === 'PENDING' || item.status === 'MISSING'));
+                                            return matchesSearch && matchesStatus;
+                                        }).map((item) => (
                                             <tr key={item.student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <div className="font-medium text-gray-900 dark:text-white">{item.student.name}</div>
@@ -1281,7 +1327,7 @@ const StaffCourseDetails = () => {
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {item.submission?.submittedAt ? new Date(item.submission.submittedAt).toLocaleString() : '-'}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 no-print">
                                                     {item.submission ? (
                                                         <button
                                                             onClick={() => handleDownloadSubmission(item)}
@@ -1296,7 +1342,7 @@ const StaffCourseDetails = () => {
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
                                                     {item.submission?.grade || '-'}
                                                 </td>
-                                                <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm no-print">
                                                     <button
                                                         onClick={() => handleOpenGrading(item)}
                                                         disabled={!item.submission}

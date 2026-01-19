@@ -302,6 +302,12 @@ export const createAssignment = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
+        // Validate Date
+        const parsedDate = new Date(dueDate);
+        if (isNaN(parsedDate.getTime())) {
+            return res.status(400).json({ message: 'Invalid due date format' });
+        }
+
         const course = await prisma.course.findFirst({
             where: { id, instructorId: userId }
         });
@@ -315,9 +321,9 @@ export const createAssignment = async (req: Request, res: Response) => {
                 courseId: id,
                 title,
                 description,
-                dueDate: new Date(dueDate),
+                dueDate: parsedDate,
                 status: status || 'PENDING',
-                fileUrl
+                fileUrl: fileUrl || null // Ensure empty string becomes null
             }
         });
 

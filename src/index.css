@@ -15,3 +15,67 @@
   --tooltip-bg: #1f2937;
   /* gray-800 */
 }
+
+/* Print Styles */
+@media print {
+
+  /* Hide everything by default using visibility */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Make the printable area and its children visible */
+  #printable-area,
+  #printable-area * {
+    visibility: visible;
+  }
+
+  /* Position: Absolute top-left, force height auto to remove vertical centering */
+  #printable-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: auto !important;
+    min-height: 0 !important;
+    /* Override previous min-height */
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    z-index: 9999 !important;
+    overflow: visible !important;
+    display: block !important;
+    /* Override flex */
+  }
+
+  /* Reset inner container: remove flex centering, shadow, etc. */
+  #printable-area>div {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    display: block !important;
+    /* Override flex */
+  }
+
+  /* Ensure table scrolls are gone */
+  #printable-area .overflow-y-auto {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Hide print-hidden elements (like modal header/footer if they use this class) */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Color adjustment */
+  * {
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
