@@ -74,7 +74,7 @@ const StaffCourseDetails = () => {
 
     // Announcement States
     const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
-    const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '' });
+    const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', expiresAt: '' });
     const [announcementToDelete, setAnnouncementToDelete] = useState(null);
 
     // Attendance State
@@ -452,11 +452,12 @@ const StaffCourseDetails = () => {
             await api.post('/announcements', {
                 ...announcementForm,
                 courseId: id,
-                targetRole: 'STUDENT'
+                targetRole: 'STUDENT',
+                expiresAt: announcementForm.expiresAt || null
             });
             toast.success('Announcement posted');
             setAnnouncementModalOpen(false);
-            setAnnouncementForm({ title: '', content: '' });
+            setAnnouncementForm({ title: '', content: '', expiresAt: '' });
             fetchDetails();
         } catch (error) {
             toast.error('Failed to post announcement');
@@ -1557,6 +1558,22 @@ const StaffCourseDetails = () => {
                                     onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
                                 />
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Expiration Date (Optional)
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={announcementForm.expiresAt}
+                                    onChange={(e) => setAnnouncementForm({ ...announcementForm, expiresAt: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">
+                                    After this date, the announcement can be archived from the dashboard.
+                                </p>
+                            </div>
+
                             <button
                                 type="submit"
                                 disabled={submitting}

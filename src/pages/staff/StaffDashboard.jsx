@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { BookOpen, Users, Clock, Bell } from 'lucide-react';
+import { Bell, BookOpen, Calendar, CheckCircle, Clock, Users, X, Archive } from 'lucide-react';
 
 import api from '../../services/api';
 
@@ -32,7 +33,7 @@ const StaffDashboard = () => {
         const parts = fullName.split(' ');
         const honorifics = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
         if (honorifics.some(h => parts[0].startsWith(h)) && parts.length > 1) {
-            return `${parts[0]} ${parts[1]}`;
+            return `${parts[0]} ${parts[1]} `;
         }
         return parts[0];
     };
@@ -101,8 +102,8 @@ const StaffDashboard = () => {
                                     className="p-4 border border-gray-100 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                 >
                                     <div className="flex items-start justify-between">
-                                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ann.type === 'academic' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                            }`}>
+                                        <span className={`text - xs font - semibold px - 2 py - 0.5 rounded - full ${ann.type === 'academic' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                            } `}>
                                             {ann.type.toUpperCase()}
                                         </span>
                                         <span className="text-xs text-gray-400">{ann.date}</span>
@@ -112,7 +113,18 @@ const StaffDashboard = () => {
                                         <BookOpen size={12} />
                                         {ann.courseName}
                                     </div>
-                                    <p className="text-sm text-gray-500 mt-1 truncate">{ann.content}</p>
+                                    <div className="flex justify-between items-center mt-1">
+                                        <p className="text-sm text-gray-500 truncate flex-1">{ann.content}</p>
+                                        {ann.expiresAt && new Date(ann.expiresAt) < new Date() && (
+                                            <button
+                                                onClick={(e) => handleArchiveAnnouncement(e, ann.id)}
+                                                className="ml-2 p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                                                title="Archive Announcement"
+                                            >
+                                                <Archive size={16} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             ))
                         ) : (
@@ -134,10 +146,10 @@ const StaffDashboard = () => {
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${selectedAnnouncement.type === 'academic'
-                                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
-                                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                                        }`}>
+                                    <span className={`text - xs font - bold uppercase px - 2 py - 1 rounded ${selectedAnnouncement.type === 'academic'
+                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+                                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                        } `}>
                                         {selectedAnnouncement.type}
                                     </span>
                                     <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded flex items-center gap-1">

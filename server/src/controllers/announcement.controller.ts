@@ -224,3 +224,48 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error deleting announcement' });
     }
 };
+
+export const archiveAnnouncement = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = (req as AuthRequest).user!;
+
+        const announcement = await prisma.announcement.findUnique({
+            where: { id },
+            include: { course: true }
+        });
+
+        if (!announcement) {
+            return res.status(404).json({ message: 'Announcement not found' });
+        }
+
+        // Authorization: Admin or Course Instructor
+        let authorized = false;
+        if (user.role === 'ADMIN') {
+            authorized = true;
+        } else if ((user.role === 'STAFF' || user.role === 'TUTOR') && announcement.courseId) {
+            if (announcement.course?.instructorId === user.userId) {
+                authorized = true;
+            }
+        }
+
+        if (!authorized) {
+            return res.status(403).json({ message: 'Not authorized to archive this announcement' });
+        }
+
+        const updated = await prisma.announcement.update({
+            where: { id },
+            data: { isArchived: true }
+        });
+
+        if (user) {
+            const ip = req.ip || 'unknown';
+            await logAudit(user.userId, 'ARCHIVE_ANNOUNCEMENT', 'ANNOUNCEMENT', { id }, ip);
+        }
+
+        res.json(updated);
+    } catch (error) {
+        console.error('Archive announcement error:', error);
+        res.status(500).json({ message: 'Error archiving announcement' });
+    }
+};

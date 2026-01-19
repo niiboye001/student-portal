@@ -74,7 +74,7 @@ const AuditLogs = () => {
             </div>
 
             {/* Logs Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div id="printable-area" className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
@@ -82,6 +82,7 @@ const AuditLogs = () => {
                                 <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Timestamp</th>
                                 <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">User</th>
                                 <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Action</th>
+                                <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Status</th>
                                 <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">Details</th>
                                 <th className="px-4 py-3 font-semibold text-gray-900 dark:text-white">IP Address</th>
                             </tr>
@@ -112,6 +113,14 @@ const AuditLogs = () => {
                                                     'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                                 }`}>
                                                 {log.action}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${log.status === 'SUCCESS' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                    log.status === 'FAILURE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                }`}>
+                                                {log.status || 'SUCCESS'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono">

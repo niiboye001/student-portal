@@ -38,7 +38,7 @@ model Profile {
   phone   String?
   address String?
   userId  String  @unique
-  user    User    @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Course {
@@ -48,7 +48,7 @@ model Course {
   description String?
   credits     Int             @default(3)
   instructorId String?
-  instructor   User?          @relation("InstructorCourses", fields: [instructorId], references: [id])
+  instructor   User?          @relation("InstructorCourses", fields: [instructorId], references: [id], onDelete: SetNull)
   level       Int             @default(100)
   semester    Int             @default(1)
   assignments Assignment[]
@@ -73,7 +73,7 @@ model Enrollment {
   enrolledAt DateTime @default(now())
   lastViewedDiscussionsAt DateTime @default(now())
   course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
@@ -127,7 +127,7 @@ model Submission {
   studentId    String
 
   assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  student      User       @relation(fields: [studentId], references: [id])
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId])
   @@index([studentId])
@@ -135,13 +135,14 @@ model Submission {
 
 model AuditLog {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String?
   action    String
   resource  String
   details   String?
   ipAddress String?
+  status    String   @default("SUCCESS") // SUCCESS, FAILURE, WARNING
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -154,6 +155,7 @@ model Announcement {
   targetRole String? // STUDENT, STAFF, or null for all
   createdAt DateTime @default(now())
   expiresAt DateTime?
+  isArchived Boolean @default(false)
   courseId  String?
   course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }

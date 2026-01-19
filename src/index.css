@@ -111,7 +111,6 @@
     text-transform: capitalize !important;
     border: none !important;
     padding: 0 !important;
-    font-style: italic !important;
   }
 
   #printable-area td span[data-status="GRADED"] {

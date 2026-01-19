@@ -6,9 +6,9 @@ import fs from 'fs';
 // This works for both `ts-node src/index.ts` and `node dist/src/index.js`
 // as long as you run them from 'c:\Users\Nii Boye\Desktop\projects\stdportal\server'
 
-console.log(`[ENV] Current CWD: ${process.cwd()}`);
+
 const envPath = path.resolve(process.cwd(), '.env');
-console.log(`[ENV] Loading .env from: ${envPath}`);
+
 
 if (fs.existsSync(envPath)) {
     const result = dotenv.config({ path: envPath });

@@ -72,6 +72,7 @@ export const getStaffStats = async (req: Request, res: Response) => {
         // 4. Fetch announcements (System-wide + Course specific for this instructor)
         const announcements = await prisma.announcement.findMany({
             where: {
+                isArchived: false,
                 OR: [
                     { targetRole: null },
                     { targetRole: 'STAFF' },
@@ -92,6 +93,7 @@ export const getStaffStats = async (req: Request, res: Response) => {
             title: a.title,
             content: a.content,
             date: a.createdAt.toISOString().split('T')[0],
+            expiresAt: a.expiresAt, // Add this
             type: a.type,
             courseName: a.course?.name || 'System Announcement'
         }));

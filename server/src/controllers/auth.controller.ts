@@ -63,15 +63,25 @@ export const login = async (req: Request, res: Response) => {
     try {
         const { userId, password } = loginSchema.parse(req.body);
 
-        const user = await prisma.user.findUnique({ where: { username: userId } });
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { username: userId },
+                    { email: userId }
+                ]
+            }
+        });
 
         if (!user) {
+            // Log failed attempt (unknown user)
+            await logAudit(null, 'LOGIN_FAILED', 'AUTH', { method: 'unknown_user', attemptedId: userId }, req.ip, 'FAILURE');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
+            await logAudit(user.id, 'LOGIN_FAILED', 'AUTH', { method: 'password_mismatch' }, req.ip, 'FAILURE');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -117,7 +127,7 @@ export const login = async (req: Request, res: Response) => {
         });
 
         // Log Audit
-        await logAudit(user.id, 'LOGIN', 'AUTH', { method: 'username' }, req.ip);
+        await logAudit(user.id, 'LOGIN', 'AUTH', { method: 'username' }, req.ip, 'SUCCESS');
 
         res.json({
             message: 'Login successful',

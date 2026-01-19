@@ -1,6 +1,6 @@
 import prisma from '../utils/prisma';
 
-export const logAudit = async (userId: string, action: string, resource: string, details?: any, ipAddress?: string) => {
+export const logAudit = async (userId: string | null, action: string, resource: string, details?: any, ipAddress?: string, status: 'SUCCESS' | 'FAILURE' | 'WARNING' = 'SUCCESS') => {
     try {
         await prisma.auditLog.create({
             data: {
@@ -8,7 +8,8 @@ export const logAudit = async (userId: string, action: string, resource: string,
                 action,
                 resource,
                 details: details ? JSON.stringify(details) : null,
-                ipAddress
+                ipAddress,
+                status
             }
         });
     } catch (error) {
