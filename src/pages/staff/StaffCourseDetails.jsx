@@ -1241,7 +1241,7 @@ const StaffCourseDetails = () => {
 
             {/* Submissions Review Modal */}
             {submissionsModalOpen && (
-                <div id="printable-area" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-7xl overflow-hidden h-[80vh] flex flex-col">
                         <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center bg-gray-50 dark:bg-gray-700/50 shrink-0 gap-4 no-print">
                             <div className="flex-1">
@@ -1286,7 +1286,7 @@ const StaffCourseDetails = () => {
 
 
 
-                        <div className="flex-1 overflow-y-auto p-0">
+                        <div id="printable-area" className="flex-1 overflow-y-auto p-0">
                             {loadingSubmissions ? (
                                 <div className="flex items-center justify-center h-full no-print">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1314,14 +1314,16 @@ const StaffCourseDetails = () => {
                                             <tr key={item.student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <div className="font-medium text-gray-900 dark:text-white">{item.student.name}</div>
-                                                    <div className="text-xs text-gray-500">{item.student.email}</div>
+                                                    <div className="text-xs text-gray-500 no-print">{item.student.email}</div>
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    <span className={`px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${item.status === 'GRADED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                                                        item.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                                                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                                        }`}>
-                                                        {item.status}
+                                                    <span
+                                                        data-status={item.status}
+                                                        className={`px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${item.status === 'GRADED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                                                            item.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                                            }`}>
+                                                        {item.status.toLowerCase()}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

@@ -78,4 +78,55 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  /* Font size and spacing adjustment for formal printing */
+  #printable-area,
+  #printable-area * {
+    font-size: 11pt !important;
+  }
+
+  #printable-area td,
+  #printable-area th {
+    padding: 4px 8px !important;
+    white-space: wrap !important;
+    /* Allow text wrapping for compactness */
+  }
+
+  /* Content shouldn't be bold */
+  #printable-area td,
+  #printable-area td * {
+    font-weight: normal !important;
+  }
+
+  /* Ensure headers are slightly distinct but not huge */
+  #printable-area th {
+    font-weight: bold !important;
+    background-color: #f3f4f6 !important;
+    /* light gray bg for headers on print */
+  }
+
+  /* Status column customizations */
+  #printable-area td span {
+    background-color: transparent !important;
+    text-transform: capitalize !important;
+    border: none !important;
+    padding: 0 !important;
+    font-style: italic !important;
+  }
+
+  #printable-area td span[data-status="GRADED"] {
+    color: #16a34a !important;
+    /* Green */
+  }
+
+  #printable-area td span[data-status="SUBMITTED"] {
+    color: #ca8a04 !important;
+    /* Warning/Orange */
+  }
+
+  #printable-area td span[data-status="MISSING"],
+  #printable-area td span[data-status="PENDING"] {
+    color: #dc2626 !important;
+    /* Red */
+  }
 }
