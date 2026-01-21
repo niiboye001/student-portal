@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { logAudit } from '../services/audit.service';
 
 export interface AuthUser {
     userId: string;
@@ -33,6 +34,7 @@ export const authorize = (...roles: string[]) => {
         }
 
         if (!roles.includes(req.user.role)) {
+            logAudit(req.user.userId, 'UNAUTHORIZED_ACCESS', 'AUTH', { required: roles, actual: req.user.role, url: req.originalUrl }, req.ip, 'WARNING');
             return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
         }
 

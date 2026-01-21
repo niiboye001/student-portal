@@ -18,6 +18,10 @@
 
 /* Print Styles */
 @media print {
+  @page {
+    size: landscape;
+    margin: 1cm;
+  }
 
   /* Hide everything by default using visibility */
   body * {
@@ -35,20 +39,20 @@
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 100vw !important;
+    width: 100% !important;
+    /* Changed from 100vw to fit page margins */
+    max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    /* Override previous min-height */
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
     z-index: 9999 !important;
     overflow: visible !important;
     display: block !important;
-    /* Override flex */
   }
 
-  /* Reset inner container: remove flex centering, shadow, etc. */
+  /* Reset inner container */
   #printable-area>div {
     width: 100% !important;
     max-width: none !important;
@@ -58,7 +62,6 @@
     margin: 0 !important;
     background: white !important;
     display: block !important;
-    /* Override flex */
   }
 
   /* Ensure table scrolls are gone */
@@ -67,7 +70,7 @@
     height: auto !important;
   }
 
-  /* Hide print-hidden elements (like modal header/footer if they use this class) */
+  /* Hide print-hidden elements */
   .no-print {
     display: none !important;
   }
@@ -79,17 +82,23 @@
     print-color-adjust: exact !important;
   }
 
-  /* Font size and spacing adjustment for formal printing */
+  /* Font size and spacing */
   #printable-area,
   #printable-area * {
-    font-size: 11pt !important;
+    font-size: 10pt !important;
+    /* Slightly smaller for more data */
   }
 
   #printable-area td,
   #printable-area th {
-    padding: 4px 8px !important;
-    white-space: wrap !important;
-    /* Allow text wrapping for compactness */
+    padding: 4px 6px !important;
+    white-space: pre-wrap !important;
+    /* Preserve wrapping */
+    word-break: break-word !important;
+    /* Break long words/JSON */
+    vertical-align: top !important;
+    border: 1px solid #e5e7eb !important;
+    /* Add borders for clarity */
   }
 
   /* Content shouldn't be bold */

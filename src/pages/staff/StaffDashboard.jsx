@@ -4,12 +4,18 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Bell, BookOpen, Calendar, CheckCircle, Clock, Users, X, Archive } from 'lucide-react';
 
 import api from '../../services/api';
+import toast from 'react-hot-toast';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const StaffDashboard = () => {
     const { user } = useAuth();
     const [stats, setStats] = React.useState({ courses: 0, students: 0, upcomingClasses: 0, announcements: [] });
     const [loading, setLoading] = React.useState(true);
     const [selectedAnnouncement, setSelectedAnnouncement] = React.useState(null);
+    const [archiveConf, setArchiveConf] = React.useState({ open: false, id: null });
+    const [showArchived, setShowArchived] = React.useState(false);
+    const [announcements, setAnnouncements] = React.useState([]);
+    const [announcementsLoading, setAnnouncementsLoading] = React.useState(false);
 
     React.useEffect(() => {
         const fetchStats = async () => {
@@ -25,6 +31,63 @@ const StaffDashboard = () => {
 
         fetchStats();
     }, []);
+
+    React.useEffect(() => {
+        const fetchAnnouncements = async () => {
+            setAnnouncementsLoading(true);
+            try {
+                const status = showArchived ? 'archived' : 'active';
+                const { data } = await api.get(`/announcements?status=${status}`);
+                // Map API response to match Dashboard UI expectations
+                const mapped = data.map(a => ({
+                    id: a.id,
+                    title: a.title,
+                    content: a.content,
+                    date: new Date(a.createdAt).toISOString().split('T')[0],
+                    type: a.type,
+                    courseName: a.courseName,
+                    expiresAt: a.expiresAt
+                }));
+                setAnnouncements(mapped);
+            } catch (error) {
+                console.error('Failed to fetch announcements', error);
+            } finally {
+                setAnnouncementsLoading(false);
+            }
+        };
+
+        fetchAnnouncements();
+    }, [showArchived]);
+
+    const fetchStats = async () => {
+        try {
+            const { data } = await api.get('/staff/stats');
+            setStats(data);
+        } catch (error) {
+            console.error('Failed to fetch stats', error);
+        }
+    };
+
+    const handleArchiveAnnouncement = (e, announcementId) => {
+        e.stopPropagation();
+        setArchiveConf({ open: true, id: announcementId });
+    };
+
+    const confirmArchiveAnnouncement = async () => {
+        try {
+            await api.put(`/announcements/${archiveConf.id}/archive`);
+            toast.success('Announcement archived');
+            setArchiveConf({ open: false, id: null });
+            fetchStats();
+            // Trigger announcement refresh
+            setShowArchived(prev => prev); // Cheap trigger or create a separate refresh function
+            // Actually, better to just modify showArchived toggle or dependency
+            window.location.reload(); // Simplest for now, or move logic to function
+        } catch (error) {
+            console.error('Error archiving announcement:', error);
+            toast.error('Failed to archive announcement');
+        }
+    };
 
     // Logic: If name starts with a title (Mr., Ms., Dr., Prof.), use the first two words (e.g. "Ms. Connor"). 
     // Otherwise just use the first name (e.g. "Alex").
@@ -92,17 +155,30 @@ const StaffDashboard = () => {
                             <Bell size={20} className="text-orange-600 dark:text-orange-400" />
                             Announcements
                         </h2>
+                        <button
+                            onClick={() => setShowArchived(!showArchived)}
+                            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${showArchived
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                                }`}
+                        >
+                            {showArchived ? 'View Active' : 'View Archived'}
+                        </button>
                     </div>
                     <div className="space-y-4">
-                        {stats.announcements && stats.announcements.length > 0 ? (
-                            stats.announcements.map((ann) => (
+                        {announcementsLoading ? (
+                            <div className="flex justify-center items-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                            </div>
+                        ) : announcements && announcements.length > 0 ? (
+                            announcements.map((ann) => (
                                 <div
                                     key={ann.id}
                                     onClick={() => setSelectedAnnouncement(ann)}
                                     className="p-4 border border-gray-100 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                 >
                                     <div className="flex items-start justify-between">
-                                        <span className={`text - xs font - semibold px - 2 py - 0.5 rounded - full ${ann.type === 'academic' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ann.type === 'academic' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                                             } `}>
                                             {ann.type.toUpperCase()}
                                         </span>
@@ -147,8 +223,8 @@ const StaffDashboard = () => {
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className={`text - xs font - bold uppercase px - 2 py - 1 rounded ${selectedAnnouncement.type === 'academic'
-                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
-                                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+                                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                                         } `}>
                                         {selectedAnnouncement.type}
                                     </span>
@@ -189,6 +265,16 @@ const StaffDashboard = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={archiveConf.open}
+                onClose={() => setArchiveConf({ open: false, id: null })}
+                onConfirm={confirmArchiveAnnouncement}
+                title="Archive Announcement"
+                message="Are you sure you want to archive this announcement? It will be removed from your dashboard view but will remain in the database."
+                confirmText="Archive"
+                isDanger={false}
+            />
         </div>
     );
 };

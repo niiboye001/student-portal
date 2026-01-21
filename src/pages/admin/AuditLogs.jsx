@@ -16,6 +16,7 @@ const AuditLogs = () => {
                 offset: page * 50
             });
             if (filters.action) params.append('action', filters.action);
+            if (filters.status) params.append('status', filters.status);
 
             const { data } = await api.get(`/admin/audit?${params}`);
             setLogs(data.logs);
@@ -71,6 +72,19 @@ const AuditLogs = () => {
                         onChange={handleFilterChange}
                     />
                 </div>
+                <div className="w-48">
+                    <select
+                        name="status"
+                        className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={filters.status || ''}
+                        onChange={handleFilterChange}
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="SUCCESS">Success</option>
+                        <option value="FAILURE">Failure</option>
+                        <option value="WARNING">Warning</option>
+                    </select>
+                </div>
             </div>
 
             {/* Logs Table */}
@@ -117,8 +131,8 @@ const AuditLogs = () => {
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${log.status === 'SUCCESS' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                    log.status === 'FAILURE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                log.status === 'FAILURE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                                                 }`}>
                                                 {log.status || 'SUCCESS'}
                                             </span>

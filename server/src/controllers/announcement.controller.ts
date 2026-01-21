@@ -29,6 +29,7 @@ export const getAnnouncements = async (req: Request, res: Response) => {
         if (status === 'active') {
             where.AND = [
                 ...(where.AND || []),
+                { isArchived: false },
                 {
                     OR: [
                         { expiresAt: null },
@@ -39,7 +40,7 @@ export const getAnnouncements = async (req: Request, res: Response) => {
         } else if (status === 'archived') {
             where.AND = [
                 ...(where.AND || []),
-                { expiresAt: { lt: now } } // Strictly past
+                { isArchived: true }
             ];
         }
         // if status === 'all', we don't add any expiry date filter

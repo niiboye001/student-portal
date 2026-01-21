@@ -3,11 +3,12 @@ import prisma from '../utils/prisma';
 
 export const getAuditLogs = async (req: Request, res: Response) => {
     try {
-        const { limit = '50', offset = '0', action, userId } = req.query;
+        const { limit = '50', offset = '0', action, userId, status } = req.query;
 
         const where: any = {};
         if (action) where.action = { contains: String(action) };
         if (userId) where.userId = String(userId);
+        if (status) where.status = String(status);
 
         const logs = await prisma.auditLog.findMany({
             where,
